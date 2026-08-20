@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Barbergame</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#080808;
+    color:rgba(255,255,255,0.85);
+    font-family:'DM Mono',monospace;
+    height:100vh; overflow:hidden;
+    display:flex; flex-direction:column;
+    user-select:none;
+  }
+
+  /* HEADER */
+  header {
+    height:80px; display:flex; align-items:center;
+    justify-content:space-between; padding:0 32px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    background:linear-gradient(180deg,#0d0d0d 0%,#080808 100%);
+    z-index:10; flex-shrink:0;
+  }
+  .logo { font-family:'Bebas Neue',sans-serif; font-size:44px; letter-spacing:4px; color:#fff; line-height:1; }
+  .logo-sub { font-size:9px; letter-spacing:6px; color:rgba(255,255,255,0.3); text-transform:uppercase; margin-top:2px; }
+  .header-right { text-align:right; }
+  .live-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; letter-spacing:2px; color:rgba(255,255,255,0.5); text-transform:uppercase; }
+  .live-dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.7); animation:blink 1.5s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.7)} }
+  .slot-count { font-size:24px; font-family:'Bebas Neue',sans-serif; letter-spacing:2px; color:#fff; margin-top:2px; }
+
+  /* CONTROLS */
+  .controls {
+    height:80px; display:flex; align-items:center;
+    padding:0 32px; gap:24px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.03); flex-shrink:0;
+  }
+  .control-group { display:flex; align-items:center; gap:16px; flex:1; }
+  .control-label { font-size:10px; letter-spacing:3px; color:rgba(255,255,255,0.3); text-transform:uppercase; white-space:nowrap; }
+  .distance-display { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:2px; color:#fff; min-width:80px; }
+  input[type="range"] {
+    -webkit-appearance:none; appearance:none;
+    flex:1; height:1px; background:rgba(255,255,255,0.15);
+    border-radius:1px; outline:none; cursor:pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+    background:transparent; border:2px solid rgba(255,255,255,0.8);
+    box-shadow:0 0 10px rgba(255,255,255,0.3); cursor:pointer;
+    transition:transform .15s,box-shadow .15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform:scale(1.3); box-shadow:0 0 18px rgba(255,255,255,0.6); }
+  .slider-wrap { flex:1; display:flex; flex-direction:column; }
+  .slider-range { display:flex; justify-content:space-between; font-size:9px; color:rgba(255,255,255,0.25); letter-spacing:1px; margin-top:8px; pointer-events:none; }
+  .legend { display:flex; align-items:center; gap:20px; flex-shrink:0; border-left:1px solid rgba(255,255,255,0.08); padding-left:24px; }
+  .legend-item { display:flex; align-items:center; gap:8px; font-size:10px; letter-spacing:1px; color:rgba(255,255,255,0.4); }
+  .legend-ring { width:14px; height:14px; border-radius:50%; background:transparent; flex-shrink:0; }
+
+  /* CANVAS */
+  #canvas-wrap { flex:1; position:relative; overflow:hidden; }
+  canvas { display:block; width:100%; height:100%; }
+
+  /* DROPZONE TEXT OVERLAY */
+  #dz-overlay {
+    position:absolute; bottom:0; left:0; right:0;
+    height:33.333%;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:8px; pointer-events:none;
+    opacity:0; transition:opacity 0.25s;
+    z-index:5;
+  }
+  #dz-overlay.show { opacity:1; }
+  .dz-title {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:26px; letter-spacing:8px;
+    color:rgba(255,255,255,0.7);
+    transition:color 0.2s, transform 0.2s, letter-spacing 0.2s;
+  }
+  #dz-overlay.hot .dz-title {
+    color:#fff; transform:scale(1.05);
+    letter-spacing:10px;
+    text-shadow:0 0 40px rgba(255,255,255,0.5);
+  }
+  .dz-sub {
+    font-size:10px; letter-spacing:4px;
+    color:rgba(255,255,255,0.3); text-transform:uppercase;
+    transition:color 0.2s;
+  }
+  #dz-overlay.hot .dz-sub { color:rgba(255,255,255,0.55); }
+
+  /* FLOATING DRAG PILL */
+  #drag-pill {
+    position:fixed; pointer-events:none;
+    font-family:'DM Mono',monospace;
+    font-size:11px; letter-spacing:2px;
+    color:rgba(255,255,255,0.9);
+    background:rgba(10,10,10,0.88);
+    border:1px solid rgba(255,255,255,0.18);
+    border-radius:30px; padding:6px 16px;
+    white-space:nowrap; z-index:300;
+    opacity:0; transform:translate(-50%,-260%);
+    transition:opacity 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    backdrop-filter:blur(10px);
+  }
+  #drag-pill.show { opacity:1; }
+  #drag-pill.hot {
+    background:rgba(255,255,255,0.12);
+    border-color:rgba(255,255,255,0.65);
+    box-shadow:0 0 24px rgba(255,255,255,0.18);
+  }
+
+  /* TOOLTIP */
+  #tooltip {
+    position:absolute; pointer-events:none;
+    background:rgba(8,8,8,0.94); border:1px solid rgba(255,255,255,0.12);
+    border-radius:10px; padding:12px 16px;
+    font-size:12px; line-height:1.7;
+    opacity:0; transition:opacity .15s;
+    z-index:20; min-width:165px; backdrop-filter:blur(16px);
+  }
+  #tooltip.visible { opacity:1; }
+  .tt-name { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px; margin-bottom:4px; color:#fff; }
+  .tt-row { display:flex; justify-content:space-between; gap:12px; color:rgba(255,255,255,0.35); }
+  .tt-val { color:rgba(255,255,255,0.85); }
+
+  /* MODAL */
+  #modal-overlay {
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0);
+    backdrop-filter:blur(0px);
+    z-index:500; display:flex;
+    align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity 0.32s ease, backdrop-filter 0.32s ease, background 0.32s ease;
+  }
+  #modal-overlay.open {
+    opacity:1; pointer-events:all;
+    background:rgba(0,0,0,0.78);
+    backdrop-filter:blur(14px);
+  }
+  #modal {
+    position:relative; width:min(500px,88vw);
+    background:#0c0c0c;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:22px;
+    padding:50px 52px 46px;
+    transform:translateY(28px) scale(0.95);
+    transition:transform 0.36s cubic-bezier(.2,.95,.4,1.05);
+    overflow:hidden;
+  }
+  #modal-overlay.open #modal { transform:translateY(0) scale(1); }
+
+  /* decorative dashed ring in modal background */
+  .modal-bg-ring {
+    position:absolute; top:-80px; right:-80px;
+    width:260px; height:260px; border-radius:50%;
+    border:1px dashed rgba(255,255,255,0.06);
+    pointer-events:none;
+  }
+  .modal-bg-ring2 {
+    position:absolute; top:-40px; right:-40px;
+    width:180px; height:180px; border-radius:50%;
+    pointer-events:none;
+  }
+
+  #modal-close {
+    position:absolute; top:18px; right:20px;
+    width:36px; height:36px; border-radius:50%;
+    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(255,255,255,0.04);
+    color:rgba(255,255,255,0.45); font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:2; line-height:1;
+    transition:background 0.18s, color 0.18s, border-color 0.18s;
+  }
+  #modal-close:hover { background:rgba(255,255,255,0.1); color:#fff; border-color:rgba(255,255,255,0.38); }
+
+  .m-eyebrow { font-size:9px; letter-spacing:5px; color:rgba(255,255,255,0.28); text-transform:uppercase; margin-bottom:10px; }
+  .m-name { font-family:'Bebas Neue',sans-serif; font-size:50px; letter-spacing:3px; color:#fff; line-height:1.05; margin-bottom:4px; }
+  .m-tagline { font-size:10px; letter-spacing:4px; color:rgba(255,255,255,0.32); text-transform:uppercase; margin-bottom:34px; }
+
+  .m-row {
+    display:flex; align-items:center;
+    justify-content:space-between;
+    padding:13px 0;
+    border-bottom:1px solid rgba(255,255,255,0.055);
+  }
+  .m-row:last-of-type { border-bottom:none; }
+  .m-key { font-size:9px; letter-spacing:3px; color:rgba(255,255,255,0.28); text-transform:uppercase; }
+  .m-val { font-size:17px; font-family:'Bebas Neue',sans-serif; letter-spacing:2px; color:rgba(255,255,255,0.88); }
+
+  #modal-confirm {
+    width:100%; height:52px; margin-top:30px;
+    border:1.5px solid rgba(255,255,255,0.65);
+    background:transparent; border-radius:10px;
+    color:#fff; font-family:'Bebas Neue',sans-serif;
+    font-size:19px; letter-spacing:5px;
+    cursor:pointer;
+    transition:background 0.18s, box-shadow 0.18s, border-color 0.18s;
+  }
+  #modal-confirm:hover {
+    background:rgba(255,255,255,0.09);
+    box-shadow:0 0 32px rgba(255,255,255,0.13);
+    border-color:#fff;
+  }
+  #modal-confirm:active { background:rgba(255,255,255,0.16); }
+
+  /* noise overlay */
+  body::after {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:600; opacity:.22;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">The Barbergame</div>
+    <div class="logo-sub">Same-Day Slots · Find Your Cut</div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><span class="live-dot"></span> Live Today</div>
+    <div class="slot-count" id="slot-count">– available slots</div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="control-group">
+    <span class="control-label">Distance</span>
+    <div class="distance-display" id="dist-display">5.0 mi</div>
+    <div class="slider-wrap">
+      <input type="range" id="dist-slider" min="0" max="100" value="28" step="1">
+      <div class="slider-range"><span>0.5 mi</span><span>30+ mi</span></div>
+    </div>
+  </div>
+  <div class="legend" id="legend"></div>
+</div>
+
+<div id="canvas-wrap">
+  <canvas id="c"></canvas>
+  <div id="dz-overlay">
+    <div class="dz-title" id="dz-title">DROP TO BOOK</div>
+    <div class="dz-sub">Release here to confirm appointment</div>
+  </div>
+</div>
+
+<div id="drag-pill"></div>
+
+<div id="tooltip">
+  <div class="tt-name" id="tt-name"></div>
+  <div class="tt-row"><span>Time</span><span class="tt-val" id="tt-time"></span></div>
+  <div class="tt-row"><span>Service</span><span class="tt-val" id="tt-svc"></span></div>
+  <div class="tt-row"><span>Price</span><span class="tt-val" id="tt-price"></span></div>
+  <div class="tt-row"><span>Distance</span><span class="tt-val" id="tt-dist"></span></div>
+  <div class="tt-row"><span>Rating</span><span class="tt-val" id="tt-rating"></span></div>
+</div>
+
+<div id="modal-overlay">
+  <div id="modal">
+    <div class="modal-bg-ring"></div>
+    <canvas class="modal-bg-ring2" id="modal-ring-canvas" width="180" height="180"></canvas>
+    <button id="modal-close">✕</button>
+    <div class="m-eyebrow">Appointment Preview</div>
+    <div class="m-name" id="m-name"></div>
+    <div class="m-tagline" id="m-tagline"></div>
+    <div class="m-row"><span class="m-key">Date</span><span class="m-val" id="m-date"></span></div>
+    <div class="m-row"><span class="m-key">Time</span><span class="m-val" id="m-time"></span></div>
+    <div class="m-row"><span class="m-key">Service</span><span class="m-val" id="m-svc"></span></div>
+    <div class="m-row"><span class="m-key">Price</span><span class="m-val" id="m-price"></span></div>
+    <div class="m-row"><span class="m-key">Distance</span><span class="m-val" id="m-dist"></span></div>
+    <div class="m-row"><span class="m-key">Rating</span><span class="m-val" id="m-rating"></span></div>
+    <button id="modal-confirm">Confirm Booking</button>
+  </div>
+</div>
+
+<script>
+const SERVICE_STYLES = {
+  "Premium":{ strokeW:3.5, fillA:0.10, glowB:22, glowA:0.5  },
+  "Fade":   { strokeW:2.0, fillA:0.06, glowB:14, glowA:0.35 },
+  "Classic":{ strokeW:1.2, fillA:0.04, glowB: 8, glowA:0.22 },
+  "Beard":  { strokeW:0.8, fillA:0.02, glowB: 5, glowA:0.15 },
+  "Kids":   { strokeW:4.5, fillA:0.13, glowB:28, glowA:0.6  },
+};
+
+const LEGEND_ITEMS=[
+  {label:"Kids",bw:"4.5px"},{label:"Premium",bw:"3.5px"},
+  {label:"Fade",bw:"2.0px"},{label:"Classic",bw:"1.2px"},{label:"Beard",bw:"0.8px"},
+];
+document.getElementById('legend').innerHTML = LEGEND_ITEMS.map(i=>
+  `<div class="legend-item"><div class="legend-ring" style="border:${i.bw} solid rgba(255,255,255,0.7)"></div>${i.label}</div>`
+).join('');
+
+const BARBERS=[
+  {name:"Ace Cuts",       service:"Premium",dist:0.4, rating:"4.9★",price:"$45"},
+  {name:"The Sharp Room", service:"Fade",   dist:0.8, rating:"4.7★",price:"$35"},
+  {name:"Dapper & Sons",  service:"Classic",dist:1.2, rating:"4.8★",price:"$30"},
+  {name:"Razor's Edge",   service:"Beard",  dist:1.5, rating:"4.6★",price:"$28"},
+  {name:"King Klips",     service:"Premium",dist:1.9, rating:"5.0★",price:"$50"},
+  {name:"CutCraft",       service:"Fade",   dist:2.3, rating:"4.5★",price:"$32"},
+  {name:"The Mane Event", service:"Classic",dist:2.7, rating:"4.7★",price:"$28"},
+  {name:"Smooth Operator",service:"Beard",  dist:3.0, rating:"4.4★",price:"$25"},
+  {name:"FreshCuts Co",   service:"Kids",   dist:3.4, rating:"4.8★",price:"$22"},
+  {name:"Studio Blaze",   service:"Premium",dist:4.0, rating:"4.6★",price:"$42"},
+  {name:"Chop Shop",      service:"Fade",   dist:4.5, rating:"4.3★",price:"$30"},
+  {name:"Block Barbers",  service:"Classic",dist:5.2, rating:"4.5★",price:"$26"},
+  {name:"Urban Trim",     service:"Beard",  dist:6.0, rating:"4.7★",price:"$30"},
+  {name:"The Lineup",     service:"Premium",dist:7.1, rating:"4.9★",price:"$48"},
+  {name:"Gentleman's Cut",service:"Classic",dist:7.8, rating:"4.6★",price:"$32"},
+  {name:"Snip & Style",   service:"Kids",   dist:8.5, rating:"4.8★",price:"$20"},
+  {name:"True North Cuts",service:"Fade",   dist:9.2, rating:"4.4★",price:"$28"},
+  {name:"The Blade House",service:"Beard",  dist:10.0,rating:"4.7★",price:"$35"},
+  {name:"Parlour 44",     service:"Premium",dist:11.5,rating:"4.8★",price:"$55"},
+  {name:"Fade Factory",   service:"Fade",   dist:12.0,rating:"4.5★",price:"$33"},
+  {name:"Classic Cuts",   service:"Classic",dist:13.5,rating:"4.3★",price:"$25"},
+  {name:"The Beard Lab",  service:"Beard",  dist:14.0,rating:"4.6★",price:"$32"},
+  {name:"Mini Mops",      service:"Kids",   dist:16.0,rating:"4.9★",price:"$18"},
+  {name:"Crown & Comb",   service:"Premium",dist:18.0,rating:"4.7★",price:"$44"},
+  {name:"Side Street Cuts",service:"Fade",  dist:20.0,rating:"4.4★",price:"$29"},
+  {name:"Heritage Barber",service:"Classic",dist:22.0,rating:"4.8★",price:"$35"},
+  {name:"The Artisan Cut",service:"Premium",dist:25.0,rating:"5.0★",price:"$60"},
+  {name:"North End Clips",service:"Fade",   dist:27.0,rating:"4.3★",price:"$26"},
+  {name:"Westside Barber",service:"Classic",dist:29.0,rating:"4.5★",price:"$28"},
+  {name:"Borderline Cuts",service:"Beard",  dist:31.0,rating:"4.6★",price:"$30"},
+];
+const TIMES=["8:00 AM","8:30 AM","9:00 AM","9:30 AM","10:00 AM","10:30 AM",
+  "11:00 AM","11:30 AM","12:00 PM","12:30 PM","1:00 PM","1:30 PM",
+  "2:00 PM","2:30 PM","3:00 PM","3:30 PM","4:00 PM","4:30 PM","5:00 PM","5:30 PM","6:00 PM"];
+
+function sliderToDist(v){ return v<=28?0.5+(v/28)*4.5:5+((v-28)/72)*26; }
+function buildSlots(lim){
+  const out=[];
+  BARBERS.filter(b=>b.dist<=lim).forEach(barber=>{
+    const n=Math.max(1,Math.round(4-barber.dist*0.15));
+    [...TIMES].sort(()=>Math.random()-.5).slice(0,n).sort().forEach(t=>out.push({barber,time:t}));
+  });
+  return out;
+}
+
+// ── BUBBLE ────────────────────────────────────────────────────────────────────
+class Bubble {
+  constructor(slot,cx,cy,W,H){
+    this.slot=slot; this.style=SERVICE_STYLES[slot.barber.service];
+    this.r=42+Math.random()*14;
+    this.x=cx+(Math.random()-.5)*W*0.6;
+    this.y=cy+(Math.random()-.5)*H*0.6;
+    this.vx=(Math.random()-.5)*1.5;
+    this.vy=(Math.random()-.5)*1.5-1.5;
+    this.alpha=0; this.wobble=Math.random()*Math.PI*2;
+    this.wobbleSpeed=0.02+Math.random()*0.01;
+    this.hovered=false; this.dragging=false;
+  }
+  update(W,H,few){
+    if(this.dragging)return;
+    this.wobble+=this.wobbleSpeed;
+    this.alpha=Math.min(1,this.alpha+0.04);
+    const cx=W/2;
+    if(few){ this.vx+=(cx-this.x)*0.0012; this.vy+=(H*0.18-this.y)*0.0012; }
+    else   { this.vy-=0.035; this.vx+=(cx-this.x)*0.0003; }
+    this.vx*=0.985; this.vy*=0.985; this.x+=this.vx; this.y+=this.vy;
+    const m=this.r+8;
+    if(this.x<m){this.x=m;this.vx=Math.abs(this.vx)*0.6;}
+    if(this.x>W-m){this.x=W-m;this.vx=-Math.abs(this.vx)*0.6;}
+    if(this.y<m){this.y=m;this.vy=Math.abs(this.vy)*0.6;}
+    if(this.y>H-m){this.y=H-m;this.vy=-Math.abs(this.vy)*0.6;}
+  }
+  draw(ctx,hot){
+    const st=this.style;
+    const wr=this.dragging?this.r:this.r+Math.sin(this.wobble)*1.2;
+    const sc=this.dragging?1.22:(this.hovered?1.1:1);
+    ctx.save();
+    ctx.globalAlpha=this.alpha;
+    ctx.translate(this.x,this.y);
+    ctx.scale(sc,sc);
+
+    // shadow/glow
+    if(this.dragging){
+      ctx.shadowColor=hot?'rgba(255,255,255,0.95)':'rgba(255,255,255,0.6)';
+      ctx.shadowBlur=hot?55:38;
+    } else {
+      const ga=this.hovered?Math.min(1,st.glowA*1.6):st.glowA;
+      ctx.shadowColor=`rgba(255,255,255,${ga})`;
+      ctx.shadowBlur=this.hovered?st.glowB*1.8:st.glowB;
+    }
+
+    // fill
+    const fa=this.dragging?(hot?0.24:0.16):(this.hovered?Math.min(0.22,st.fillA*1.8):st.fillA);
+    ctx.beginPath(); ctx.arc(0,0,wr,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${fa})`; ctx.fill();
+
+    // stroke
+    const sa=this.dragging?(hot?1:0.9):(this.hovered?0.95:0.75);
+    const sw=this.dragging?st.strokeW*1.6:(this.hovered?st.strokeW*1.3:st.strokeW);
+    ctx.strokeStyle=`rgba(255,255,255,${sa})`; ctx.lineWidth=sw; ctx.stroke();
+    ctx.shadowBlur=0;
+
+    // gloss
+    const g=ctx.createRadialGradient(-wr*.3,-wr*.32,0,0,0,wr);
+    g.addColorStop(0,'rgba(255,255,255,0.13)'); g.addColorStop(.5,'rgba(255,255,255,0)');
+    ctx.beginPath(); ctx.arc(0,0,wr,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+
+    // text
+    const ta=0.35+st.strokeW*0.12;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font="300 8px 'DM Mono',monospace";
+    ctx.fillStyle=`rgba(255,255,255,${Math.min(0.55,ta*.8)})`;
+    const nm=this.slot.barber.name.length>12?this.slot.barber.name.slice(0,11)+'…':this.slot.barber.name;
+    ctx.fillText(nm,0,-10);
+    ctx.font="500 13px 'DM Mono',monospace";
+    ctx.fillStyle=`rgba(255,255,255,${Math.min(0.95,ta+0.2)})`;
+    ctx.fillText(this.slot.time,0,6);
+    ctx.restore();
+  }
+}
+
+function resolveCollisions(bs){
+  for(let i=0;i<bs.length;i++) for(let j=i+1;j<bs.length;j++){
+    const a=bs[i],b=bs[j];
+    if(a.dragging||b.dragging)continue;
+    const dx=b.x-a.x,dy=b.y-a.y,dist=Math.sqrt(dx*dx+dy*dy),minD=a.r+b.r+4;
+    if(dist<minD&&dist>0.01){
+      const f=(minD-dist)/minD*0.3,nx=dx/dist,ny=dy/dist;
+      a.vx-=nx*f;a.vy-=ny*f;b.vx+=nx*f;b.vy+=ny*f;
+    }
+  }
+}
+
+// ── SETUP ─────────────────────────────────────────────────────────────────────
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+const wrap=document.getElementById('canvas-wrap');
+const tooltip=document.getElementById('tooltip');
+const dzOverlay=document.getElementById('dz-overlay');
+const dragPill=document.getElementById('drag-pill');
+const modalOverlay=document.getElementById('modal-overlay');
+
+let W,H,bubbles=[],hoveredBubble=null;
+let dragBubble=null,dragOffX=0,dragOffY=0,overZone=false;
+
+function resize(){
+  const r=wrap.getBoundingClientRect();
+  W=canvas.width=r.width; H=canvas.height=r.height;
+}
+const getDZY=()=>H*(2/3);
+
+function spawnBubbles(slots){
+  bubbles=slots.map(s=>new Bubble(s,W/2,H/2,W,H));
+}
+function updateDistance(v){
+  const d=sliderToDist(v);
+  document.getElementById('dist-display').textContent=d>=30?'30+ mi':d.toFixed(1)+' mi';
+  const slots=buildSlots(d);
+  document.getElementById('slot-count').textContent=`${slots.length} available slot${slots.length!==1?'s':''}`;
+  spawnBubbles(slots);
+}
+function hitTest(mx,my){
+  for(let i=bubbles.length-1;i>=0;i--){
+    const b=bubbles[i]; const dx=mx-b.x,dy=my-b.y;
+    if(dx*dx+dy*dy<b.r*b.r*1.4)return b;
+  }
+  return null;
+}
+
+// ── DRAG HANDLERS ─────────────────────────────────────────────────────────────
+function getPos(e){
+  const rect=canvas.getBoundingClientRect();
+  const src=e.touches?e.touches[0]:e;
+  return{x:src.clientX-rect.left,y:src.clientY-rect.top,cx:src.clientX,cy:src.clientY};
+}
+
+canvas.addEventListener('mousedown',onDown);
+canvas.addEventListener('touchstart',onDown,{passive:false});
+window.addEventListener('mousemove',onMove);
+window.addEventListener('touchmove',onMove,{passive:false});
+window.addEventListener('mouseup',onUp);
+window.addEventListener('touchend',onUp);
+
+function onDown(e){
+  const{x,y}=getPos(e);
+  const b=hitTest(x,y); if(!b)return;
+  dragBubble=b; b.dragging=true; b.vx=b.vy=0;
+  dragOffX=x-b.x; dragOffY=y-b.y;
+  tooltip.classList.remove('visible');
+  dzOverlay.classList.add('show');
+  dragPill.textContent=`✂  ${b.slot.barber.name}  ·  ${b.slot.time}`;
+  dragPill.classList.add('show');
+  canvas.style.cursor='grabbing';
+  e.preventDefault();
+}
+
+function onMove(e){
+  if(!dragBubble){
+    if(e.touches)return;
+    const{x,y}=getPos(e);
+    const hov=hitTest(x,y);
+    bubbles.forEach(b=>b.hovered=false);
+    if(hov){
+      hov.hovered=true; hoveredBubble=hov;
+      const s=hov.slot;
+      document.getElementById('tt-name').textContent=s.barber.name;
+      document.getElementById('tt-time').textContent=s.time;
+      document.getElementById('tt-svc').textContent=s.barber.service;
+      document.getElementById('tt-price').textContent=s.barber.price;
+      document.getElementById('tt-dist').textContent=s.barber.dist+' mi';
+      document.getElementById('tt-rating').textContent=s.barber.rating;
+      let tx=e.clientX+16,ty=e.clientY-10;
+      if(tx+170>window.innerWidth)tx=e.clientX-182;
+      if(ty+140>window.innerHeight)ty=e.clientY-140;
+      tooltip.style.left=tx+'px'; tooltip.style.top=ty+'px';
+      tooltip.classList.add('visible');
+    } else {
+      hoveredBubble=null; tooltip.classList.remove('visible');
+    }
+    canvas.style.cursor=hov?'grab':'default';
+    return;
+  }
+  e.preventDefault();
+  const{x,y,cx,cy}=getPos(e);
+  dragBubble.x=x-dragOffX; dragBubble.y=y-dragOffY;
+  overZone=y>=getDZY();
+  dzOverlay.classList.toggle('hot',overZone);
+  dragPill.classList.toggle('hot',overZone);
+  dragPill.textContent=overZone
+    ?`↓  Release to Book Now`
+    :`✂  ${dragBubble.slot.barber.name}  ·  ${dragBubble.slot.time}`;
+  dragPill.style.left=cx+'px'; dragPill.style.top=cy+'px';
+}
+
+function onUp(e){
+  if(!dragBubble)return;
+  const b=dragBubble; dragBubble=null;
+  dzOverlay.classList.remove('show','hot');
+  dragPill.classList.remove('show','hot');
+  canvas.style.cursor='default';
+  const wasOver=overZone; overZone=false;
+  b.dragging=false;
+  if(wasOver){
+    b.vy=-4; b.vx=(Math.random()-.5)*3;
+    openModal(b.slot);
+  } else {
+    b.vx=(Math.random()-.5)*2; b.vy=-2;
+  }
+}
+
+canvas.addEventListener('mouseleave',()=>{
+  if(!dragBubble){ bubbles.forEach(b=>b.hovered=false); hoveredBubble=null; tooltip.classList.remove('visible'); }
+});
+document.getElementById('dist-slider').addEventListener('input',e=>updateDistance(parseInt(e.target.value)));
+window.addEventListener('resize',()=>{ resize(); bubbles.forEach(b=>{ b.x=Math.min(Math.max(b.x,b.r+8),W-b.r-8); b.y=Math.min(Math.max(b.y,b.r+8),H-b.r-8); }); });
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openModal(slot){
+  const b=slot.barber;
+  const today=new Date();
+  const dateStr=today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('m-name').textContent=b.name;
+  document.getElementById('m-tagline').textContent=b.service+' · '+b.dist+' mi away';
+  document.getElementById('m-date').textContent=dateStr;
+  document.getElementById('m-time').textContent=slot.time;
+  document.getElementById('m-svc').textContent=b.service;
+  document.getElementById('m-price').textContent=b.price;
+  document.getElementById('m-dist').textContent=b.dist+' mi';
+  document.getElementById('m-rating').textContent=b.rating;
+
+  // draw decorative ring in modal bg using service strokeW
+  const mc=document.getElementById('modal-ring-canvas');
+  const mx=mc.getContext('2d');
+  const st=SERVICE_STYLES[b.service];
+  mx.clearRect(0,0,180,180);
+  mx.strokeStyle='rgba(255,255,255,1)'; mx.lineWidth=st.strokeW*2.5;
+  mx.beginPath(); mx.arc(90,90,72,0,Math.PI*2); mx.stroke();
+  mx.strokeStyle='rgba(255,255,255,0.25)'; mx.lineWidth=st.strokeW;
+  mx.beginPath(); mx.arc(90,90,52,0,Math.PI*2); mx.stroke();
+
+  modalOverlay.classList.add('open');
+}
+function closeModal(){ modalOverlay.classList.remove('open'); }
+
+document.getElementById('modal-close').addEventListener('click',closeModal);
+modalOverlay.addEventListener('click',e=>{ if(e.target===modalOverlay)closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeModal(); });
+document.getElementById('modal-confirm').addEventListener('click',()=>{
+  closeModal();
+  const flash=document.createElement('div');
+  flash.style.cssText='position:fixed;inset:0;background:rgba(255,255,255,0.07);z-index:999;pointer-events:none;transition:opacity .6s;';
+  document.body.appendChild(flash);
+  requestAnimationFrame(()=>{ flash.style.opacity='0'; });
+  setTimeout(()=>flash.remove(),700);
+});
+
+// ── RENDER LOOP ───────────────────────────────────────────────────────────────
+let frame=0;
+function loop(){
+  requestAnimationFrame(loop); frame++;
+  ctx.clearRect(0,0,W,H);
+
+  // vignette
+  const vg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*.72);
+  vg.addColorStop(0,'rgba(12,12,12,0)'); vg.addColorStop(1,'rgba(2,2,2,.65)');
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+
+  // grid
+  if(frame%3===0){
+    ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.018)'; ctx.lineWidth=1;
+    for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    ctx.restore();
+  }
+
+  // ── dropzone (only visible while dragging) ───────────────────────────────
+  const isDragging=!!dragBubble;
+  if(isDragging){
+    const dzy=getDZY();
+    // fill
+    const dzg=ctx.createLinearGradient(0,dzy,0,H);
+    if(overZone){
+      dzg.addColorStop(0,'rgba(255,255,255,0.08)');
+      dzg.addColorStop(1,'rgba(255,255,255,0.02)');
+    } else {
+      dzg.addColorStop(0,'rgba(255,255,255,0.03)');
+      dzg.addColorStop(1,'rgba(255,255,255,0.005)');
+    }
+    ctx.fillStyle=dzg; ctx.fillRect(0,dzy,W,H-dzy);
+
+    // animated dashed boundary line
+    ctx.save();
+    const dash=(frame*0.7)%20;
+    ctx.setLineDash([10,10]); ctx.lineDashOffset=-dash;
+    ctx.strokeStyle=overZone?'rgba(255,255,255,0.75)':'rgba(255,255,255,0.2)';
+    ctx.lineWidth=overZone?1.5:1;
+    ctx.beginPath(); ctx.moveTo(0,dzy); ctx.lineTo(W,dzy); ctx.stroke();
+    ctx.setLineDash([]); ctx.restore();
+  }
+
+  const few=bubbles.length<8;
+  if(frame%2===0) resolveCollisions(bubbles);
+  // draw non-dragging first, then dragging on top
+  bubbles.filter(b=>!b.dragging).forEach(b=>{ b.update(W,H,few); b.draw(ctx,false); });
+  bubbles.filter(b=> b.dragging).forEach(b=>{ b.draw(ctx,overZone); });
+}
+
+resize(); updateDistance(28); loop();
+</script>
+</body>
+</html>

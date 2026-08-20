@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Contact | John Rice</title>
+  <meta name="description" content="Get in touch with John Rice — UX and visual designer in Lynnwood, WA.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://www.johnrice.com/contact.html">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.johnrice.com/contact.html">
+  <meta property="og:title" content="Contact — John Rice">
+  <meta property="og:description" content="Get in touch with John Rice — product and UX designer in the Seattle area. Available for contract roles.">
+  <meta property="og:image" content="https://www.johnrice.com/assets/img/assorted/JCR_sigil.png">
+  <meta property="og:site_name" content="John Rice">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Contact — John Rice">
+  <meta name="twitter:description" content="Get in touch with John Rice — product and UX designer in the Seattle area. Available for contract roles.">
+  <meta name="twitter:image" content="https://www.johnrice.com/assets/img/assorted/JCR_sigil.png">
+  <meta name="author" content="JCRICE Design LLC">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+  <link rel="shortcut icon" href="assets/favicon/favicon.ico">
+  <meta name="theme-color" content="#0d0d0c">
+  <link rel="stylesheet" href="site-common.css">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3GHKKVW3V1"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-3GHKKVW3V1');</script>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to content</a>
+<nav class="site-nav" role="navigation" aria-label="Main navigation">
+  <div class="site-container">
+    <a href="index.html" class="nav-logo" aria-label="John Rice — home">
+      <img src="assets/img/assorted/JCR_sigil.png" alt="" class="sigil">
+      <img src="assets/img/assorted/johnrice-logo-white.svg" alt="John Rice">
+    </a>
+
+    <div class="nav-group desktop">
+      <ul class="nav-links" role="list">
+        <li><a href="work.html">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html" class="active">Contact</a></li>
+      </ul>
+      <div class="nav-more">
+        <button type="button" class="nav-more-btn" id="more-btn" aria-expanded="false" aria-controls="more-panel">
+          More
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <ul class="nav-more-panel" id="more-panel" role="list">
+          <li><a href="case-study.html">The Barber Game<span class="meta">Full case study</span></a></li>
+          <li><a href="drafts.html">Drafts<span class="meta">Prototypes &amp; experiments</span></a></li>
+        </ul>
+      </div>
+    </div>
+
+    <a href="assets/pdf/john-rice-resume-2026.pdf" class="nav-cta desktop" target="_blank" rel="noopener">Résumé</a>
+
+    <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-drawer">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="nav-drawer" id="nav-drawer" role="dialog" aria-modal="true" aria-label="Menu">
+  <ul class="nav-links" role="list">
+    <li><a href="work.html">Work</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <p class="drawer-label">More</p>
+  <ul class="nav-links" role="list">
+    <li><a href="case-study.html">The Barber Game</a></li>
+    <li><a href="drafts.html">Drafts</a></li>
+  </ul>
+  <a href="assets/pdf/john-rice-resume-2026.pdf" class="btn-primary-jcr nav-cta" target="_blank" rel="noopener">Download résumé</a>
+</div>
+
+<main id="main">
+  <section class="page-content">
+    <div class="site-container">
+      <div class="prose-col">
+
+        <p class="section-label">Contact</p>
+        <h1 style="margin-bottom:12px;">Get in touch</h1>
+        <p style="margin-bottom:40px;">Prefer to talk right away? <a href="https://calendly.com/johnrice-design-llc/introduction" target="_blank" rel="noopener">Book a 15-minute intro call.</a></p>
+
+        <form id="contact-form" novalidate>
+
+          <div class="field">
+            <label for="email" class="field-required">Email</label>
+            <input type="email" id="email" name="email" required placeholder="you@example.com" autocomplete="email">
+          </div>
+
+          <div class="field">
+            <label for="name" class="field-required">Name</label>
+            <input type="text" id="name" name="name" required autocomplete="name">
+          </div>
+
+          <div class="field">
+            <label for="project">What are you working on?</label>
+            <textarea id="project" name="project" rows="4" placeholder="Tell me a little about what you need"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="interest">Area of interest</label>
+            <select id="interest" name="interest">
+              <option value="introduction">Introduction</option>
+              <option value="logo">Logo &amp; identity</option>
+              <option value="web">Website</option>
+              <option value="print">Print &amp; signage</option>
+              <option value="other">Something else</option>
+            </select>
+          </div>
+
+          <div id="form-error" style="display:none;font-size:13px;color:#c0574a;margin-top:8px;"></div>
+
+          <button type="submit" id="form-submit" class="btn-primary-jcr" style="margin-top:16px;">Send message</button>
+
+        </form>
+
+        <!-- Success state (hidden until submission) -->
+        <div id="form-success" style="display:none;">
+          <p style="font-size:15px;color:var(--muted);line-height:1.7;padding:24px 0;border-top:1px solid var(--border);">
+            Message sent. I'll be in touch at the email you provided.
+          </p>
+          <a href="index.html" class="btn-outline-jcr">Back to home</a>
+        </div>
+
+        <p class="form-note" id="form-note">Your information is only used to respond to your inquiry. Never shared.</p>
+
+        <script>
+          document.getElementById('contact-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            const btn = document.getElementById('form-submit');
+            const errEl = document.getElementById('form-error');
+            const email = document.getElementById('email').value.trim();
+            const name = document.getElementById('name').value.trim();
+
+            errEl.style.display = 'none';
+
+            if (!email || !name) {
+              errEl.textContent = 'Please fill in your name and email.';
+              errEl.style.display = 'block';
+              return;
+            }
+
+            btn.textContent = 'Sending…';
+            btn.disabled = true;
+
+            try {
+              const res = await fetch('https://formspree.io/f/xqegnqky', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: new FormData(form)
+              });
+
+              if (res.ok) {
+                form.style.display = 'none';
+                document.getElementById('form-note').style.display = 'none';
+                document.getElementById('form-success').style.display = 'block';
+              } else {
+                const data = await res.json();
+                errEl.textContent = data?.errors?.[0]?.message || 'Something went wrong. Please try again.';
+                errEl.style.display = 'block';
+                btn.textContent = 'Send message';
+                btn.disabled = false;
+              }
+            } catch(err) {
+              errEl.textContent = 'Network error — please check your connection and try again.';
+              errEl.style.display = 'block';
+              btn.textContent = 'Send message';
+              btn.disabled = false;
+            }
+          });
+        </script>
+
+        <hr class="section-rule">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;">
+          <div>
+            <p class="section-label">Email</p>
+            <p><a href="mailto:john@johnrice.com">john@johnrice.com</a></p>
+          </div>
+          <div>
+            <p class="section-label">Office</p>
+            <p><a href="https://www.google.com/maps/search/?api=1&query=12455+168th+Street,+Lynnwood,+WA+98055" target="_blank" rel="noopener">12455 168th Street<br>Loft Space, Lynnwood WA 98055</a></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="site-container">
+    <div class="footer-inner">
+      <a href="index.html" aria-label="John Rice — home"><img src="assets/img/assorted/johnrice-logo-white.svg" alt="John Rice" style="height:18px;opacity:0.5;"></a>
+      <ul class="footer-nav" role="list">
+        <li><a href="work.html">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="drafts.html">Drafts</a></li>
+        <li><a href="assets/pdf/john-rice-resume-2026.pdf" target="_blank" rel="noopener">Résumé</a></li>
+      </ul>
+      <div class="footer-social">
+        <a href="https://www.linkedin.com/in/johncrice/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://www.instagram.com/johncrice/" target="_blank" rel="noopener">Instagram</a>
+        <a href="mailto:john@johnrice.com">Email</a>
+      </div>
+      <p class="footer-copy">© 2026 JCRICE Design LLC</p>
+    </div>
+  </div>
+</footer>
+<script src="assets/js/site-nav.js"></script>

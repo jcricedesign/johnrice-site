@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>The Barber Game — Case Study | John Rice</title>
+  <meta name="description" content="Designing a trust system from zero: how research redirected The Barber Game from scheduling to verified capability, and how that became a product architecture and a market strategy. Case study by John Rice.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="John Rice">
+  <link rel="canonical" href="https://www.johnrice.com/case-study.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.johnrice.com/case-study.html">
+  <meta property="og:title" content="The Barber Game — Designing a trust system from zero">
+  <meta property="og:description" content="How research redirected the product from scheduling to verified capability, and how that became a product architecture and a market strategy.">
+  <meta property="og:image" content="https://www.johnrice.com/assets/img/assorted/JCR_sigil.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Barber Game — Designing a trust system from zero">
+  <meta name="twitter:description" content="How research redirected the product from scheduling to verified capability, and how that became a product architecture and a market strategy.">
+  <meta name="twitter:image" content="https://www.johnrice.com/assets/img/assorted/JCR_sigil.png">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  <link rel="shortcut icon" href="assets/favicon/favicon.ico">
+  <meta name="theme-color" content="#0d0d0c">
+
+  <link rel="stylesheet" href="site-common.css">
+
+  <style>
+    .cs-shell { max-width: 840px; margin: 0 auto; }
+    .cs-shell p { max-width: var(--max-prose); }
+
+    .cs-section { margin-bottom: 56px; }
+    .cs-section h2 {
+      margin: 0 0 18px;
+      font-size: clamp(24px, 4vw, 34px);
+      letter-spacing: -0.02em;
+    }
+    .cs-section p { margin: 0 0 16px; }
+
+    /* Capability tiers */
+    .cs-tiers {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 26px 0 8px;
+    }
+    .cs-tier {
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-surface);
+    }
+    .cs-tier h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      letter-spacing: -0.01em;
+    }
+    .cs-tier .cs-tier-src {
+      margin: 0 0 12px;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--hint);
+    }
+    .cs-tier p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--muted); }
+
+    /* Trust Engine loop */
+    .cs-loop { margin: 24px 0 8px; padding: 0; list-style: none; counter-reset: loop; }
+    .cs-loop li {
+      position: relative;
+      counter-increment: loop;
+      padding: 14px 0 14px 46px;
+      border-bottom: 1px solid var(--border);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .cs-loop li:first-child { border-top: 1px solid var(--border); }
+    .cs-loop li::before {
+      content: counter(loop);
+      position: absolute;
+      left: 0; top: 15px;
+      width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border-md);
+      border-radius: 100px;
+      font-size: 12px;
+      color: var(--accent);
+    }
+    .cs-loop li:last-child { color: var(--white); }
+
+    /* Pull statement */
+    .cs-pull {
+      margin: 32px 0;
+      padding: 24px 26px;
+      border-left: 2px solid var(--accent);
+      background: var(--bg-surface);
+      border-radius: 0 8px 8px 0;
+    }
+    .cs-pull p {
+      margin: 0;
+      font-size: clamp(18px, 2.4vw, 21px);
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: var(--white);
+    }
+    .cs-pull .cs-pull-note {
+      margin-top: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--muted);
+      letter-spacing: 0;
+    }
+
+    @media (max-width: 720px) {
+      .cs-tiers { grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3GHKKVW3V1"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-3GHKKVW3V1');</script>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<nav class="site-nav" role="navigation" aria-label="Main navigation">
+  <div class="site-container">
+    <a href="index.html" class="nav-logo" aria-label="John Rice — home">
+      <img src="assets/img/assorted/JCR_sigil.png" alt="" class="sigil">
+      <img src="assets/img/assorted/johnrice-logo-white.svg" alt="John Rice">
+    </a>
+
+    <div class="nav-group desktop">
+      <ul class="nav-links" role="list">
+        <li><a href="work.html">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+      <div class="nav-more">
+        <button type="button" class="nav-more-btn" id="more-btn" aria-expanded="false" aria-controls="more-panel">
+          More
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
+        <ul class="nav-more-panel" id="more-panel" role="list">
+          <li><a href="case-study.html">The Barber Game<span class="meta">Full case study</span></a></li>
+          <li><a href="drafts.html">Drafts<span class="meta">Prototypes &amp; experiments</span></a></li>
+        </ul>
+      </div>
+    </div>
+
+    <a href="assets/pdf/john-rice-resume-2026.pdf" class="nav-cta desktop" target="_blank" rel="noopener">Résumé</a>
+
+    <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-drawer">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="nav-drawer" id="nav-drawer" role="dialog" aria-modal="true" aria-label="Menu">
+  <ul class="nav-links" role="list">
+    <li><a href="work.html">Work</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <p class="drawer-label">More</p>
+  <ul class="nav-links" role="list">
+    <li><a href="case-study.html">The Barber Game</a></li>
+    <li><a href="drafts.html">Drafts</a></li>
+  </ul>
+  <a href="assets/pdf/john-rice-resume-2026.pdf" class="btn-primary-jcr nav-cta" target="_blank" rel="noopener">Download résumé</a>
+</div>
+
+<main id="main">
+  <section class="page-content">
+    <div class="site-container">
+      <div class="cs-shell">
+
+        <p class="section-label">Case Study</p>
+        <h1 style="margin-bottom:10px;">The Barber Game</h1>
+        <p class="lede" style="margin-bottom:0;">Designing a trust system from zero &mdash; and the market strategy that came out of it.</p>
+
+        <div class="cred-strip">
+          <p class="cred">Co-founder &amp; Product Design Lead<span>Role</span></p>
+          <p class="cred">Dec 2024 &ndash; Present<span>Timeline</span></p>
+          <p class="cred">Discovery → Architecture → Roadmap → Ship<span>Scope</span></p>
+        </div>
+
+        <section class="cs-section" aria-labelledby="the-brief">
+          <h2 id="the-brief">There was no brief</h2>
+          <p>Two friends and I started The Barber Game with an idea and nothing else: there should be a better way for people to find and connect with barbers. No specification, no product, no agreed definition of the problem worth solving first.</p>
+          <p>My job was to decide what we should build and why. That meant product discovery, research, experience strategy and design &mdash; working directly with my co-founders, with customers, and with our engineers.</p>
+        </section>
+
+        <section class="cs-section" aria-labelledby="the-reframe">
+          <h2 id="the-reframe">The problem we assumed wasn't the problem</h2>
+          <p>We started where most people start: scheduling. Open slots, bookings, calendars. So I went and talked with independent barbers, shop owners and clients about how the work actually happens.</p>
+          <p>Two things came back that changed the product.</p>
+          <p>First, scheduling is a solved problem that nobody is emotionally invested in. Before anyone books a barber, they have to decide whether they trust that barber &mdash; and that decision is where all the friction lives.</p>
+          <p>Second, and more usefully: there is no reliable way to know what a barber can actually <em>do</em>. Star ratings average an entire person into a single number. They tell you nothing about whether this barber can cut coily hair, work a straight razor, handle a wheelchair-height chair, or work respectfully at a hospital bedside.</p>
+          <p>So we stopped building a booking tool and started building a matching system: pair a specific customer need to a specific, verified barber capability.</p>
+        </section>
+
+        <section class="cs-section" aria-labelledby="the-architecture">
+          <h2 id="the-architecture">Three tiers of capability</h2>
+          <p>The core architectural decision was to stop treating "skill" as one thing. A capability on the platform exists in one of three states, and the difference between them is the entire product.</p>
+
+          <div class="cs-tiers">
+            <div class="cs-tier">
+              <h3>Asserted</h3>
+              <p class="cs-tier-src">Stated by the barber</p>
+              <p>What a barber says they can do. Free to enter, easy to list, and worth exactly what any self-report is worth.</p>
+            </div>
+            <div class="cs-tier">
+              <h3>Proven</h3>
+              <p class="cs-tier-src">Confirmed by real work</p>
+              <p>A capability that has actually been performed, and confirmed by the person who received the service.</p>
+            </div>
+            <div class="cs-tier">
+              <h3>Affirmed</h3>
+              <p class="cs-tier-src">Recognized by the profession</p>
+              <p>Standing that comes from repeated proven work and from peers, shops and industry bodies &mdash; not from the platform.</p>
+            </div>
+          </div>
+
+          <p style="margin-top:22px;">Ratings attach to the capability rather than the person. A barber can be exceptional at one thing and untested at another, and the system says so plainly instead of averaging it away.</p>
+        </section>
+
+        <section class="cs-section" aria-labelledby="the-loop">
+          <h2 id="the-loop">Closing the loop</h2>
+          <p>A verification system is only as good as its weakest input. If verification can be self-asserted, bought, or farmed, the whole structure collapses back into the star ratings we were trying to replace.</p>
+          <p>So we built it around something that cannot be faked at a distance: both people, physically present, confirming the work at the moment it was finished. That one constraint shaped everything downstream.</p>
+
+          <ol class="cs-loop">
+            <li>A barber asserts a capability.</li>
+            <li>A customer with that specific need is matched to them.</li>
+            <li>The appointment happens in person.</li>
+            <li>Both people confirm it took place, in the room.</li>
+            <li>The rating attaches to that capability, not to the barber as a whole.</li>
+            <li>Proven capability raises standing &mdash; which produces better matches, which produces more proven work.</li>
+          </ol>
+
+          <p style="margin-top:22px;">We call the loop the Trust Engine. Everything else in the product is either feeding it or spending what it produces.</p>
+
+          <div class="cs-pull">
+            <p>Standing is earned, never purchased.</p>
+            <p class="cs-pull-note">This was the hardest constraint to hold and the most important one. It rules out promoted placement, paid badges, and every other revenue mechanism that would let money buy the appearance of skill. A trust product that sells trust has nothing left to sell.</p>
+          </div>
+        </section>
+
+        <section class="cs-section" aria-labelledby="the-market">
+          <h2 id="the-market">Where the demand actually is</h2>
+          <p>Once capability was the unit of the system rather than availability, a market opening became visible that we had not been looking for.</p>
+          <p>Nearly every product in this category is built for the same transaction: a walk-in customer, a shop chair, a standard cut. But a great deal of real barbering happens somewhere else entirely &mdash; often not in a shop at all &mdash; in settings where the need is highly specific, the stakes are higher, and there is currently no reliable way to find a qualified person.</p>
+
+          <p>Those segments are underserved precisely <em>because</em> a star rating cannot describe them. Proven capability can. The architecture we built for trust turned out to be the thing that opens a market nobody else is positioned to address.</p>
+
+          <p>Mapping that market &mdash; which segments, in what order, and why &mdash; is the part I'd rather walk through in person than publish.</p>
+        </section>
+
+        <section class="cs-section" aria-labelledby="the-game">
+          <h2 id="the-game">What "the game" actually means</h2>
+          <p>The name gets misread as gamification &mdash; points, streaks, leaderboards. It means the opposite.</p>
+          <p>Barbers already have careers. They are craftspeople, business owners, counselors and mentors, and many of them will know a client as a child, a teenager, an adult, and eventually as a parent bringing in their own kids. What they don't have is any structure that recognizes that career or carries any of the benefits an employer would provide.</p>
+          <p>So proving a capability doesn't unlock a badge. It unlocks a ladder &mdash; a progression that begins with a professional identity you can actually demonstrate, and climbs toward the kind of stability independent work has never carried with it. We modelled the structure on how guilds have done exactly this for other professions built on independent operators.</p>
+
+          <div class="cs-pull" style="margin-top:30px;">
+            <p>Every verified haircut should make a barber's career stronger.</p>
+            <p class="cs-pull-note">The platform's job is to recognize a professional journey that already exists &mdash; not to invent a scoring system and ask people to play it.</p>
+          </div>
+        </section>
+
+        <section class="cs-section" aria-labelledby="the-build">
+          <h2 id="the-build">Designing while building</h2>
+          <p>I work directly with engineering as concepts move from Figma into the product. One co-founder is our backend engineer; a front-end engineer handles implementation and wiring. Research, design and build inform each other continuously, and the roadmap changes when what we learn says it should.</p>
+          <p>The sharpest lesson of the last year is a management one. Generating screens has never been cheaper &mdash; and a pile of screens is not a working product. Most of my effort now goes into sequencing: deciding what has to exist first, what can wait, and how long the real engineering will actually take. The constraint stopped being imagination a long time ago.</p>
+        </section>
+
+        <hr class="section-rule">
+
+        <section class="cs-section" aria-labelledby="the-point">
+          <h2 id="the-point">What this was an exercise in</h2>
+          <p>Nobody handed us a problem definition, a spec, or a design system. The work was deciding what the thing should be, building the argument for it, getting three founders and an engineering team aligned behind it, and then taking it all the way into production.</p>
+          <p><strong>The Barber Game started as an idea for finding barbers. It became a system for deciding whom to trust &mdash; and a case for what verified work should be worth to the person who did it.</strong></p>
+        </section>
+
+        <h3 class="subhead" style="margin-top:0;">Want the longer version?</h3>
+        <p>A detailed walkthrough of the research, the product architecture, the design evolution and the current build is available as a presentation.</p>
+
+        <div class="btn-row">
+          <a href="https://calendly.com/johnrice-design-llc/introduction" class="btn-primary-jcr" target="_blank" rel="noopener">Schedule a walkthrough</a>
+          <a href="work.html" class="btn-outline-jcr">See the rest of the work</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="site-container">
+    <div class="footer-inner">
+      <a href="index.html" aria-label="John Rice — home"><img src="assets/img/assorted/johnrice-logo-white.svg" alt="John Rice" style="height:18px;opacity:0.5;"></a>
+      <ul class="footer-nav" role="list">
+        <li><a href="work.html">Work</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="drafts.html">Drafts</a></li>
+        <li><a href="assets/pdf/john-rice-resume-2026.pdf" target="_blank" rel="noopener">Résumé</a></li>
+      </ul>
+      <div class="footer-social">
+        <a href="https://www.linkedin.com/in/johncrice/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://www.instagram.com/johncrice/" target="_blank" rel="noopener">Instagram</a>
+        <a href="mailto:john@johnrice.com">Email</a>
+      </div>
+      <p class="footer-copy">© 2026 JCRICE Design LLC</p>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/site-nav.js"></script>
+</body>
+</html>

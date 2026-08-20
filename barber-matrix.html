@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Barbergame — Schedule</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080808;
+    --surface: #0e0e0e;
+    --border: rgba(255,255,255,0.07);
+    --border-mid: rgba(255,255,255,0.12);
+    --text: rgba(255,255,255,0.85);
+    --muted: rgba(255,255,255,0.28);
+    --label-w: 22%;
+    --row-h: 60px;
+    --col-header-h: 60px;
+    --col0: #e8612a;
+    --col1: #d4a017;
+    --col2: #2a9d5c;
+    --col0-dim: rgba(232,97,42,0.18);
+    --col1-dim: rgba(212,160,23,0.18);
+    --col2-dim: rgba(42,157,92,0.18);
+    --col0-border: rgba(232,97,42,0.55);
+    --col1-border: rgba(212,160,23,0.55);
+    --col2-border: rgba(42,157,92,0.55);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── MAIN HEADER ── */
+  .main-header {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg,#0d0d0d 0%,var(--bg) 100%);
+    flex-shrink: 0;
+    z-index: 50;
+  }
+  .logo { font-family:'Bebas Neue',sans-serif; font-size:40px; letter-spacing:4px; color:#fff; line-height:1; }
+  .logo-sub { font-size:9px; letter-spacing:5px; color:var(--muted); text-transform:uppercase; margin-top:2px; }
+  .header-meta { display:flex; align-items:center; gap:28px; }
+  .live-badge { display:inline-flex; align-items:center; gap:6px; font-size:10px; letter-spacing:2px; color:rgba(255,255,255,0.45); text-transform:uppercase; }
+  .live-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.65); animation:blink 1.6s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+  .slot-tally { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:2px; color:#fff; }
+  .tally-label { font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-top:1px; }
+
+  /* ── LEGEND BAR ── */
+  .controls-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    flex-shrink: 0;
+    z-index: 50;
+  }
+  .ctrl-now { font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+  .ctrl-now span { color:rgba(255,255,255,0.7); }
+
+  /* ── GRID SHELL ── */
+  #grid-shell {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Sticky column headers row */
+  #col-headers {
+    display: flex;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-mid);
+    background: var(--bg);
+    position: relative;
+    z-index: 30;
+    height: var(--col-header-h);
+    width: 100%;
+  }
+  .ch-spacer {
+    width: var(--label-w);
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    background: var(--bg);
+    display: flex;
+    align-items: flex-end;
+    padding: 0 8px 8px;
+    font-size:8px; letter-spacing:2px; color:var(--muted); text-transform:uppercase;
+    overflow: hidden;
+  }
+  .ch-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--border);
+    gap: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ch-col::after {
+    content:'';
+    position:absolute; bottom:0; left:0; right:0;
+    height:3px;
+  }
+  .ch-col.col-0::after { background: var(--col0); }
+  .ch-col.col-1::after { background: var(--col1); }
+  .ch-col.col-2::after { background: var(--col2); }
+  .ch-hour {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(18px, 4vw, 30px); letter-spacing:2px;
+    line-height:1;
+  }
+  .ch-col.col-0 .ch-hour { color: var(--col0); }
+  .ch-col.col-1 .ch-hour { color: var(--col1); }
+  .ch-col.col-2 .ch-hour { color: var(--col2); }
+  .ch-ampm { font-size:clamp(7px,1.5vw,9px); letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+  .ch-slots-left { font-size:clamp(7px,1.5vw,8px); letter-spacing:1px; color:rgba(255,255,255,0.28); margin-top:1px; }
+
+  /* scrollable body */
+  #grid-body {
+    flex:1; overflow-y:auto; overflow-x:hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+  }
+  #grid-body::-webkit-scrollbar { width:4px; }
+  #grid-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
+
+  /* ── DISTANCE BAND ── */
+  .distance-band {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border-mid);
+    border-top: 1px solid var(--border-mid);
+    display: flex;
+    align-items: stretch;
+    height: 44px;
+  }
+  .band-label-cell {
+    width: var(--label-w);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .band-icon { font-size:14px; opacity:0.7; flex-shrink:0; }
+  .band-name { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px; color:rgba(255,255,255,0.85); white-space:nowrap; overflow:hidden; }
+  .band-dist { font-size:8px; letter-spacing:2px; color:var(--muted); margin-top:1px; white-space:nowrap; }
+  .band-fill { flex:1; display:flex; align-items:center; padding:0 10px; gap:6px; min-width:0; }
+  .band-count { font-size:8px; letter-spacing:2px; color:rgba(255,255,255,0.22); text-transform:uppercase; white-space:nowrap; }
+
+  /* ── BARBER ROW ── */
+  .barber-row {
+    display: flex;
+    align-items: stretch;
+    height: var(--row-h);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    width: 100%;
+  }
+  .barber-row:hover { background: rgba(255,255,255,0.016); }
+
+  /* left label cell */
+  .bl-cell {
+    width: var(--label-w);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .bl-shop {
+    font-size:clamp(10px,2.5vw,12px); font-weight:500; color:rgba(255,255,255,0.78);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    letter-spacing:0.2px;
+  }
+
+  /* slot cells */
+  .slot-cell {
+    flex: 1;
+    min-width: 0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-right:1px solid var(--border);
+    padding:6px 7px;
+    position:relative;
+  }
+
+  /* availability block — solid color rect, no text */
+  .avail-block {
+    width:100%; height:100%;
+    border-radius:5px;
+    cursor:pointer;
+    position:relative;
+    transition:transform 0.12s, filter 0.12s, box-shadow 0.12s, opacity 0.6s;
+    border: 1px solid transparent;
+  }
+  .avail-block.col-0 {
+    background: var(--col0-dim);
+    border-color: var(--col0-border);
+  }
+  .avail-block.col-1 {
+    background: var(--col1-dim);
+    border-color: var(--col1-border);
+  }
+  .avail-block.col-2 {
+    background: var(--col2-dim);
+    border-color: var(--col2-border);
+  }
+  .avail-block:hover {
+    transform: scale(1.05);
+    filter: brightness(1.5);
+  }
+  .avail-block.col-0:hover { box-shadow: 0 0 16px rgba(232,97,42,0.4); }
+  .avail-block.col-1:hover { box-shadow: 0 0 16px rgba(212,160,23,0.4); }
+  .avail-block.col-2:hover { box-shadow: 0 0 16px rgba(42,157,92,0.4); }
+
+  /* time line in col-0 */
+  .slot-cell.col-0 { overflow: hidden; }
+  .time-line {
+    position: absolute;
+    top: 4px; bottom: 4px;
+    width: 1.5px;
+    background: rgba(255,255,255,0.55);
+    pointer-events: none;
+    z-index: 4;
+    /* soft glow so it reads on orange bg */
+    box-shadow: 0 0 6px rgba(255,255,255,0.4), 0 0 2px rgba(255,255,255,0.9);
+  }
+  /* tiny "now" pip at top of the line */
+  .time-line::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 50%;
+    transform: translateX(-50%);
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 6px rgba(255,255,255,0.8);
+  }
+
+  /* empty cell hint */
+  .empty-cell { opacity:0; }
+
+  /* ── MODAL ── */
+  #modal-overlay {
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0);
+    backdrop-filter:blur(0px);
+    z-index:500; display:flex;
+    align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity 0.3s, backdrop-filter 0.3s, background 0.3s;
+  }
+  #modal-overlay.open {
+    opacity:1; pointer-events:all;
+    background:rgba(0,0,0,0.8);
+    backdrop-filter:blur(14px);
+  }
+  #modal {
+    position:relative; width:min(500px,88vw);
+    background:#0c0c0c;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:22px;
+    padding:48px 52px 44px;
+    transform:translateY(24px) scale(0.96);
+    transition:transform 0.34s cubic-bezier(.2,.95,.4,1.05);
+    overflow:hidden;
+  }
+  #modal-overlay.open #modal { transform:translateY(0) scale(1); }
+  .modal-bg-ring {
+    position:absolute; top:-70px; right:-70px;
+    width:240px; height:240px; border-radius:50%;
+    border:1px dashed rgba(255,255,255,0.07);
+    pointer-events:none;
+  }
+  #modal-close {
+    position:absolute; top:18px; right:20px;
+    width:34px; height:34px; border-radius:50%;
+    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(255,255,255,0.04);
+    color:rgba(255,255,255,0.45); font-size:15px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:2; transition:all 0.18s;
+  }
+  #modal-close:hover { background:rgba(255,255,255,0.1); color:#fff; border-color:rgba(255,255,255,0.35); }
+  .m-eyebrow { font-size:9px; letter-spacing:5px; color:var(--muted); text-transform:uppercase; margin-bottom:10px; }
+  .m-name { font-family:'Bebas Neue',sans-serif; font-size:48px; letter-spacing:3px; color:#fff; line-height:1; margin-bottom:4px; }
+  .m-tagline { font-size:10px; letter-spacing:4px; color:var(--muted); text-transform:uppercase; margin-bottom:32px; }
+  .m-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.055); }
+  .m-row:last-of-type { border-bottom:none; }
+  .m-key { font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; }
+  .m-val { font-size:17px; font-family:'Bebas Neue',sans-serif; letter-spacing:2px; color:rgba(255,255,255,0.88); }
+  #modal-confirm {
+    width:100%; height:52px; margin-top:28px;
+    border:1.5px solid rgba(255,255,255,0.6);
+    background:transparent; border-radius:10px;
+    color:#fff; font-family:'Bebas Neue',sans-serif;
+    font-size:18px; letter-spacing:5px; cursor:pointer;
+    transition:all 0.18s;
+  }
+  #modal-confirm:hover { background:rgba(255,255,255,0.09); box-shadow:0 0 30px rgba(255,255,255,0.12); border-color:#fff; }
+
+  /* load animation */
+  .barber-row { animation:rowIn 0.3s ease both; }
+  @keyframes rowIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:none} }
+
+  /* noise */
+  body::after {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:600; opacity:.2;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  }
+</style>
+</head>
+<body>
+
+<!-- MAIN HEADER -->
+<header class="main-header">
+  <div>
+    <div class="logo">The Barbergame</div>
+    <div class="logo-sub">Schedule View · Same-Day Slots</div>
+  </div>
+  <div class="header-meta">
+    <div class="live-badge"><span class="live-dot"></span> Live Today</div>
+    <div style="text-align:right">
+      <div class="slot-tally" id="slot-tally">–</div>
+      <div class="tally-label">open slots</div>
+    </div>
+  </div>
+</header>
+
+<!-- CONTROLS -->
+<div class="controls-bar">
+  <div class="ctrl-now">Now: <span id="now-display"></span></div>
+</div>
+
+<!-- GRID -->
+<div id="grid-shell">
+  <!-- sticky column headers -->
+  <div id="col-headers">
+    <div class="ch-spacer">Barber / Shop</div>
+    <!-- time cols injected by JS -->
+  </div>
+  <!-- scrollable rows -->
+  <div id="grid-body"></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div class="modal-bg-ring"></div>
+    <button id="modal-close">✕</button>
+    <div class="m-eyebrow">Appointment Preview</div>
+    <div class="m-name" id="m-name"></div>
+    <div class="m-tagline" id="m-tagline"></div>
+    <div class="m-row"><span class="m-key">Date</span><span class="m-val" id="m-date"></span></div>
+    <div class="m-row"><span class="m-key">Time</span><span class="m-val" id="m-time"></span></div>
+    <div class="m-row"><span class="m-key">Service</span><span class="m-val" id="m-svc"></span></div>
+    <div class="m-row"><span class="m-key">Price</span><span class="m-val" id="m-price"></span></div>
+    <div class="m-row"><span class="m-key">Distance</span><span class="m-val" id="m-dist"></span></div>
+    <div class="m-row"><span class="m-key">Rating</span><span class="m-val" id="m-rating"></span></div>
+    <button id="modal-confirm">Confirm Booking</button>
+  </div>
+</div>
+
+<script>
+// ── COLUMN COLOR SYSTEM ───────────────────────────────────────────────────────
+const COL_COLORS = [
+  { cls:'col-0', label:'12', ampm:'PM', hour:12, min:0, full:'12 PM' },
+  { cls:'col-1', label:'1',  ampm:'PM', hour:13, min:0, full:'1 PM'  },
+  { cls:'col-2', label:'2',  ampm:'PM', hour:14, min:0, full:'2 PM'  },
+];
+
+const BARBERS = [
+  {name:'Ace Cuts',       barber:'Marcus T.',  service:'Premium',dist:0.2, rating:'4.9★',price:'$45'},
+  {name:'The Sharp Room', barber:'Devon K.',   service:'Fade',   dist:0.4, rating:'4.7★',price:'$35'},
+  {name:'Dapper & Sons',  barber:'James R.',   service:'Classic',dist:0.6, rating:'4.8★',price:'$30'},
+  {name:'Razor\'s Edge',  barber:'Leo P.',     service:'Beard',  dist:0.9, rating:'4.6★',price:'$28'},
+  {name:'King Klips',     barber:'Aaron M.',   service:'Premium',dist:1.2, rating:'5.0★',price:'$50'},
+  {name:'CutCraft',       barber:'Theo S.',    service:'Fade',   dist:1.6, rating:'4.5★',price:'$32'},
+  {name:'The Mane Event', barber:'Chris W.',   service:'Classic',dist:2.1, rating:'4.7★',price:'$28'},
+  {name:'Smooth Operator',barber:'Nate B.',    service:'Beard',  dist:2.5, rating:'4.4★',price:'$25'},
+  {name:'FreshCuts Co',   barber:'Eli G.',     service:'Kids',   dist:2.9, rating:'4.8★',price:'$22'},
+  {name:'Studio Blaze',   barber:'Omar C.',    service:'Premium',dist:3.4, rating:'4.6★',price:'$42'},
+  {name:'Chop Shop',      barber:'Finn H.',    service:'Fade',   dist:4.0, rating:'4.3★',price:'$30'},
+  {name:'Block Barbers',  barber:'Seb D.',     service:'Classic',dist:4.8, rating:'4.5★',price:'$26'},
+  {name:'Urban Trim',     barber:'Kai N.',     service:'Beard',  dist:5.5, rating:'4.7★',price:'$30'},
+  {name:'The Lineup',     barber:'Zane F.',    service:'Premium',dist:6.2, rating:'4.9★',price:'$48'},
+  {name:'Gentleman\'s Cut',barber:'Ren O.',   service:'Classic',dist:7.1, rating:'4.6★',price:'$32'},
+  {name:'Snip & Style',   barber:'Cody M.',    service:'Kids',   dist:8.0, rating:'4.8★',price:'$20'},
+  {name:'True North Cuts',barber:'Drew A.',    service:'Fade',   dist:9.0, rating:'4.4★',price:'$28'},
+  {name:'The Blade House',barber:'Blake V.',   service:'Beard',  dist:10.5,rating:'4.7★',price:'$35'},
+  {name:'Parlour 44',     barber:'Scott L.',   service:'Premium',dist:12.0,rating:'4.8★',price:'$55'},
+  {name:'Fade Factory',   barber:'Jace R.',    service:'Fade',   dist:14.0,rating:'4.5★',price:'$33'},
+  {name:'Heritage Barber',barber:'Cole T.',    service:'Classic',dist:18.0,rating:'4.8★',price:'$35'},
+  {name:'The Artisan Cut',barber:'Wade P.',    service:'Premium',dist:22.0,rating:'5.0★',price:'$60'},
+  {name:'North End Clips',barber:'Gray S.',    service:'Fade',   dist:27.0,rating:'4.3★',price:'$26'},
+];
+
+const DISTANCE_BANDS = [
+  { label:'Walking',   icon:'🚶',  range:'< ¼ mile',  max: 0.5  },
+  { label:'Nearby',    icon:'🚲',  range:'< 1 mile',  max: 1.2  },
+  { label:'Close',     icon:'🚗',  range:'< 3 miles', max: 3.5  },
+  { label:'A Ride',    icon:'📍',  range:'< 10 miles',max: 10.0 },
+  { label:'Far Out',   icon:'🗺',  range:'10–30 mi',  max: 999  },
+];
+
+// ── TIME HELPERS ──────────────────────────────────────────────────────────────
+function getColumns() {
+  const today = new Date();
+  return COL_COLORS.map(c => {
+    const d = new Date(today);
+    d.setHours(c.hour, c.min, 0, 0);
+    return { ...c, date: d };
+  });
+}
+
+// deterministic slot availability per barber+hour
+function hasSlot(barber, col) {
+  const seed = barber.name.length * 7 + col.hour * 13 + col.min;
+  const prob = 0.5 - barber.dist * 0.012;
+  return ((seed * 2654435761) >>> 0) % 100 < (prob * 100);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+let cols = getColumns();
+
+function formatNow() {
+  const now = new Date();
+  return now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+}
+
+function render() {
+  cols = getColumns();
+  const activeBarbers = BARBERS;
+
+  // update now display
+  document.getElementById('now-display').textContent = formatNow();
+
+  // count total slots
+  let totalSlots = 0;
+  activeBarbers.forEach(b => cols.forEach(c => { if(hasSlot(b,c)) totalSlots++; }));
+  document.getElementById('slot-tally').textContent = totalSlots;
+
+  // build column headers
+  const chEl = document.getElementById('col-headers');
+  while (chEl.children.length > 1) chEl.removeChild(chEl.lastChild);
+  cols.forEach((col, ci) => {
+    const div = document.createElement('div');
+    div.className = `ch-col ${col.cls}`;
+    const colSlots = activeBarbers.filter(b=>hasSlot(b,col)).length;
+    div.innerHTML = `
+      <div class="ch-hour">${col.label}</div>
+      <div class="ch-ampm">${col.ampm}</div>
+      <div class="ch-slots-left">${colSlots} open</div>`;
+    chEl.appendChild(div);
+  });
+
+  // build grid body
+  const body = document.getElementById('grid-body');
+  body.innerHTML = '';
+
+  // group by distance band
+  DISTANCE_BANDS.forEach((band, bi) => {
+    const bandBarbers = activeBarbers.filter(b => {
+      const prevMax = bi === 0 ? 0 : DISTANCE_BANDS[bi-1].max;
+      return b.dist > prevMax && b.dist <= band.max;
+    });
+    if (bandBarbers.length === 0) return;
+
+    // band header
+    const bandEl = document.createElement('div');
+    bandEl.className = 'distance-band';
+    const bandSlots = bandBarbers.reduce((sum,b)=>sum+cols.filter(c=>hasSlot(b,c)).length,0);
+    bandEl.innerHTML = `
+      <div class="band-label-cell">
+        <span class="band-icon">${band.icon}</span>
+        <div>
+          <div class="band-name">${band.label}</div>
+          <div class="band-dist">${band.range}</div>
+        </div>
+      </div>
+      <div class="band-fill">
+        <div class="band-count">${bandBarbers.length} barber${bandBarbers.length!==1?'s':''} · ${bandSlots} slot${bandSlots!==1?'s':''}</div>
+      </div>`;
+    body.appendChild(bandEl);
+
+    // barber rows
+    bandBarbers.forEach((barber, rowIdx) => {
+      const row = document.createElement('div');
+      row.className = 'barber-row';
+      row.style.animationDelay = `${(rowIdx * 0.04).toFixed(2)}s`;
+
+      // left label — shop name only
+      const blCell = document.createElement('div');
+      blCell.className = 'bl-cell';
+      blCell.innerHTML = `<div class="bl-shop">${barber.name}</div>`;
+      row.appendChild(blCell);
+
+      // slot cells
+      cols.forEach((col, ci) => {
+        const cell = document.createElement('div');
+        cell.className = `slot-cell ${col.cls}`;
+
+        // time line lives in every col-0 cell (the 12 PM column)
+        if (ci === 0) {
+          const now = new Date();
+          const minsPastHour = now.getMinutes() + now.getSeconds() / 60;
+          const pct = Math.min(100, Math.max(0, (minsPastHour / 60) * 100));
+          const line = document.createElement('div');
+          line.className = 'time-line';
+          line.style.left = pct + '%';
+          cell.appendChild(line);
+        }
+
+        if (hasSlot(barber, col)) {
+          const block = document.createElement('div');
+          block.className = `avail-block ${col.cls}`;
+          block.addEventListener('click', () => openModal(barber, col));
+          cell.appendChild(block);
+        }
+        row.appendChild(cell);
+      });
+
+      body.appendChild(row);
+    });
+  });
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+const modalOverlay = document.getElementById('modal-overlay');
+
+function openModal(barber, col) {
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('m-name').textContent = barber.name;
+  document.getElementById('m-tagline').textContent = `${barber.barber} · ${barber.service}`;
+  document.getElementById('m-date').textContent = dateStr;
+  document.getElementById('m-time').textContent = col.full;
+  document.getElementById('m-svc').textContent = barber.service;
+  document.getElementById('m-price').textContent = barber.price;
+  document.getElementById('m-dist').textContent = barber.dist + ' mi';
+  document.getElementById('m-rating').textContent = barber.rating;
+  modalOverlay.classList.add('open');
+}
+
+function closeModal() { modalOverlay.classList.remove('open'); }
+
+document.getElementById('modal-close').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', e => { if(e.target===modalOverlay) closeModal(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+document.getElementById('modal-confirm').addEventListener('click', () => {
+  closeModal();
+  const flash = document.createElement('div');
+  flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,0.06);z-index:999;pointer-events:none;transition:opacity .5s;';
+  document.body.appendChild(flash);
+  requestAnimationFrame(() => { flash.style.opacity = '0'; });
+  setTimeout(() => flash.remove(), 600);
+});
+
+// ── LIVE TICK ─────────────────────────────────────────────────────────────────
+function tick() {
+  document.getElementById('now-display').textContent = formatNow();
+
+  const now = new Date();
+  const minsPastHour = now.getMinutes() + now.getSeconds() / 60;
+  const pct = Math.min(100, Math.max(0, (minsPastHour / 60) * 100));
+
+  // update every time line position
+  document.querySelectorAll('.time-line').forEach(el => {
+    el.style.left = pct + '%';
+  });
+}
+
+setInterval(tick, 60000);
+
+// init
+render();
+</script>
+</body>
+</html>

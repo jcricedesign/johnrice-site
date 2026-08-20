@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Barbergame v2.0</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Oswald:wght@600&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --flap-bg: #1a1a1a;
+    --flap-top: #141414;
+    --flap-bottom: #1e1e1e;
+    --text: #f5e6c8;
+    --text-dim: #a08050;
+    --accent: #e8a020;
+    --red: #d63030;
+    --green: #40b060;
+    --blue: #4db8ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    min-height: 100vh;
+    font-family: 'Share Tech Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* ── MOUNT BAR ── */
+  .mount-bar {
+    width: 100%;
+    height: 18px;
+    background: linear-gradient(180deg, #555 0%, #2a2a2a 60%, #111 100%);
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.6);
+  }
+
+  /* ── BOARD ── */
+  .board {
+    width: 100%;
+    flex: 1;
+    background: #0d0d0d;
+    border-top: 2px solid #222;
+    padding: 0 0 24px 0;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+    position: relative;
+  }
+  .board::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px);
+    pointer-events: none;
+  }
+
+  /* ── HEADER ── */
+  .board-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px 10px;
+    border-bottom: 2px solid #1e1e1e;
+  }
+  .board-time {
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: right;
+    white-space: nowrap;
+  }
+  #live-time { color: var(--text); font-size: 13px; }
+
+  /* ── CURRENT TIME ROW ── */
+  .now-row {
+    display: grid;
+    grid-template-columns: 90px 110px 220px 1fr 90px;
+    gap: 3px;
+    align-items: center;
+    padding: 4px 24px 4px 48px;
+    background: rgba(232,160,32,0.08);
+    border-top: 1px solid rgba(232,160,32,0.15);
+    border-bottom: 1px solid rgba(232,160,32,0.15);
+    position: relative;
+  }
+  .now-row .flap { background: #1f1900 !important; }
+  .now-row .flap-top { background: #191500 !important; }
+  .now-row .flap-bottom { background: #221c00 !important; }
+  .now-row .flap-char { color: var(--accent) !important; }
+
+  /* NOW label badge */
+  .now-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 2px 8px;
+  }
+  .now-pulse {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(232,160,32,0.9);
+    animation: pulse 1.4s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  .now-badge-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  /* ── TIMELINE WRAPPER ── */
+  .timeline-area {
+    position: relative;
+    padding: 6px 24px 0 48px;
+  }
+
+  /* ── TIME TRACK (vertical axis labels) ── */
+  .time-track {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 48px;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* ── COL HEADERS ── */
+  .col-headers {
+    display: grid;
+    grid-template-columns: 90px 110px 220px 1fr 90px;
+    gap: 3px;
+    padding: 8px 24px 6px 48px;
+    border-bottom: 1px solid #1e1e1e;
+  }
+  .col-header {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 0 6px;
+    cursor: text;
+    position: relative;
+  }
+  .col-header:hover { color: var(--accent); }
+  .col-header-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    outline: none;
+    width: 100%;
+    padding: 0 2px;
+  }
+
+  /* ── ROWS CONTAINER ── */
+  .rows-container {
+    padding: 6px 24px 0 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  /* ── TIME GROUP (rows that share a time slot) ── */
+  .time-group {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* time-group tick marker on the left */
+  .time-group-tick {
+    position: absolute;
+    left: -32px;
+    top: 9px;
+    width: 20px;
+    height: 1px;
+    background: #2a2a2a;
+  }
+  .time-group-tick::before {
+    content: '';
+    position: absolute;
+    right: 0; top: -3px;
+    width: 1px; height: 7px;
+    background: #333;
+  }
+
+  .appt-row {
+    display: grid;
+    grid-template-columns: 90px 110px 220px 1fr 90px;
+    gap: 3px;
+    align-items: center;
+    border-radius: 2px;
+    padding: 2px 0;
+  }
+
+  /* group spacing */
+  .time-group + .time-group {
+    border-top: 1px solid #1e1e1e;
+    margin-top: 2px;
+    padding-top: 2px;
+  }
+
+  /* ── FLAP CELLS ── */
+  .flap-cell {
+    display: flex;
+    gap: 2px;
+    padding: 2px 4px;
+    cursor: text;
+    position: relative;
+  }
+  .flap-cell:hover::after {
+    content: '';
+    position: absolute; inset: 0;
+    border: 1px solid rgba(232,160,32,0.3);
+    border-radius: 3px;
+    pointer-events: none;
+  }
+  .cell-input {
+    background: #0a0a0a;
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 4px 6px;
+    text-transform: uppercase;
+    outline: none;
+    width: 100%;
+    min-width: 60px;
+    box-shadow: 0 0 8px rgba(232,160,32,0.25);
+    letter-spacing: 1px;
+  }
+
+  /* ── FLAP ── */
+  .flap {
+    display: inline-flex;
+    flex-direction: column;
+    width: 18px;
+    height: 28px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--flap-bg);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.6);
+  }
+  .flap-top {
+    height: 50%;
+    background: var(--flap-top);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid #000;
+    padding-bottom: 1px;
+  }
+  .flap-bottom {
+    height: 50%;
+    background: var(--flap-bottom);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+    padding-top: 1px;
+  }
+  .flap-char {
+    font-size: 14px;
+    line-height: 1;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    display: block;
+    user-select: none;
+  }
+  .flap-top .flap-char { transform: translateY(50%); }
+  .flap-bottom .flap-char { transform: translateY(-50%); }
+
+  /* ── FLAP ANIMATION ── */
+  .flap.animating .flap-top  { animation: flipTop    0.15s ease-in          forwards; }
+  .flap.animating .flap-bottom { animation: flipBottom 0.15s ease-out 0.1s  forwards; }
+  @keyframes flipTop    { 0%{transform:rotateX(0)}   100%{transform:rotateX(-90deg);opacity:0.3} }
+  @keyframes flipBottom { 0%{transform:rotateX(90deg);opacity:0.3} 100%{transform:rotateX(0)} }
+
+  /* ── HIGHLIGHT ── */
+  .appt-row.highlighted .flap          { background: var(--accent) !important; }
+  .appt-row.highlighted .flap-top      { background: #d4901a !important; }
+  .appt-row.highlighted .flap-bottom   { background: #e8a020 !important; }
+  .appt-row.highlighted .flap-char     { color: #fff !important; }
+
+  /* ── HIGHLIGHT CELL ── */
+  .highlight-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 2px 8px;
+  }
+  .highlight-label {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: #444;
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s;
+  }
+  .highlight-check {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 13px; height: 13px;
+    border: 1px solid #333;
+    border-radius: 2px;
+    background: #111;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .highlight-check:checked { background: var(--accent); border-color: var(--accent); }
+  .highlight-check:checked::after {
+    content: '✓';
+    position: absolute; top: -1px; left: 1px;
+    font-size: 10px; color: #000; font-weight: bold;
+  }
+  .appt-row.highlighted .highlight-label { color: #000; }
+  .appt-row.highlighted .highlight-check { border-color: #000; }
+  .appt-row.highlighted .highlight-cell  { background: var(--accent); border-radius: 2px; }
+
+  /* ── NEXT-UP STRIPE ── */
+  .time-group.next-up {
+    position: relative;
+  }
+  .time-group.next-up::before {
+    content: 'NEXT';
+    position: absolute;
+    left: -44px;
+    top: 6px;
+    font-size: 7px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    opacity: 0.7;
+  }
+  .time-group.next-up .appt-row {
+    background: rgba(232,160,32,0.04);
+  }
+
+  /* ── FOOTER ── */
+  .board-footer {
+    margin-top: 14px;
+    padding: 8px 24px;
+    border-top: 1px solid #1e1e1e;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-text {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #333;
+    text-transform: uppercase;
+  }
+  .indicator-lights { display: flex; gap: 8px; }
+  .light {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #1a3a1a;
+  }
+  .light.on {
+    background: var(--green);
+    box-shadow: 0 0 10px rgba(64,176,96,0.8);
+    animation: blink 3s ease-in-out infinite;
+  }
+  .light.amber {
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(232,160,32,0.6);
+  }
+  @keyframes blink {
+    0%,90%,100%{opacity:1} 95%{opacity:0.3}
+  }
+</style>
+</head>
+<body>
+
+<div class="mount-bar"></div>
+
+<div class="board">
+  <div class="board-header">
+    <div style="display:flex;flex-direction:column;justify-content:center;height:50px;">
+      <div style="font-family:'Oswald',sans-serif;font-size:26px;letter-spacing:6px;color:var(--text);line-height:1;text-transform:uppercase;">THE <span style="color:var(--accent);">BARBERGAME</span></div>
+    </div>
+    <div class="board-time">LOCAL TIME &nbsp;<span id="live-time">--:--</span></div>
+  </div>
+
+  <!-- CURRENT TIME ROW -->
+  <div class="now-row" id="now-row">
+    <div class="flap-cell" id="now-time-flaps"></div>
+    <div class="flap-cell" id="now-price-flaps"></div>
+    <div class="flap-cell" id="now-service-flaps"></div>
+    <div class="flap-cell" id="now-barber-flaps"></div>
+    <div class="now-badge">
+      <div class="now-pulse"></div>
+      <div class="now-badge-label">Now</div>
+    </div>
+  </div>
+
+  <div class="col-headers" id="col-headers"></div>
+  <div class="rows-container" id="rows"></div>
+
+  <div class="board-footer">
+    <div class="footer-text">Chair Availability · Live Board</div>
+    <div class="footer-text">The Barbergame v2.0</div>
+    <div class="indicator-lights">
+      <div class="light on"></div>
+      <div class="light amber"></div>
+      <div class="light"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── SIMULATED CURRENT TIME ── */
+const NOW_HOUR = 3;
+const NOW_MIN  = 0;
+const NOW_STR  = String(NOW_HOUR).padStart(2,'0') + ':' + String(NOW_MIN).padStart(2,'0');
+
+/* ── APPOINTMENTS DATA ── */
+/* Sorted soonest first, spanning 3 hours from NOW (03:00 → 06:00) */
+let appts = [
+  {time:'03:15', price:'$25',  service:'FADE',          barber:'MARCO',      highlighted:false},
+  {time:'03:15', price:'$40',  service:'CUT + BEARD',   barber:'DESI',       highlighted:false},
+  {time:'03:30', price:'$20',  service:'BUZZ CUT',      barber:'TOMAS',      highlighted:false},
+  {time:'03:30', price:'$35',  service:'SCISSOR CUT',   barber:'MARCO',      highlighted:false},
+  {time:'04:00', price:'$45',  service:'FULL GROOM',    barber:'DESI',       highlighted:false},
+  {time:'04:00', price:'$25',  service:'FADE',          barber:'TOMAS',      highlighted:false},
+  {time:'04:00', price:'$30',  service:'LINE UP',       barber:'JAY',        highlighted:false},
+  {time:'04:30', price:'$20',  service:'BUZZ CUT',      barber:'MARCO',      highlighted:false},
+  {time:'04:30', price:'$55',  service:'COLOR + CUT',   barber:'DESI',       highlighted:false},
+  {time:'05:00', price:'$35',  service:'SCISSOR CUT',   barber:'JAY',        highlighted:false},
+  {time:'05:15', price:'$25',  service:'FADE',          barber:'TOMAS',      highlighted:false},
+  {time:'05:45', price:'$40',  service:'CUT + BEARD',   barber:'MARCO',      highlighted:false},
+];
+
+/* Sort by time */
+appts.sort((a, b) => a.time.localeCompare(b.time));
+
+/* ── COL HEADER LABELS ── */
+let colLabels = ['Time', 'Price', 'Service', 'Barber'];
+
+function buildColHeaders() {
+  const bar = document.getElementById('col-headers');
+  bar.innerHTML = '';
+  for (let i = 0; i < 4; i++) bar.appendChild(makeColHeader(i));
+  const hl = document.createElement('div');
+  hl.className = 'col-header';
+  hl.textContent = 'Highlight';
+  bar.appendChild(hl);
+}
+
+function makeColHeader(idx) {
+  const el = document.createElement('div');
+  el.className = 'col-header';
+  el.textContent = colLabels[idx];
+  el.title = 'Click to rename';
+  el.addEventListener('click', () => openColEdit(el, idx));
+  return el;
+}
+
+function openColEdit(el, idx) {
+  if (el.querySelector('.col-header-input')) return;
+  const prev = colLabels[idx];
+  el.textContent = '';
+  const inp = document.createElement('input');
+  inp.className = 'col-header-input';
+  inp.value = prev;
+  inp.style.width = Math.max(prev.length * 8 + 16, 48) + 'px';
+  el.appendChild(inp);
+  inp.focus(); inp.select();
+  function commit() {
+    colLabels[idx] = inp.value.trim().toUpperCase() || prev;
+    buildColHeaders();
+  }
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') inp.blur();
+    if (e.key === 'Escape') { colLabels[idx] = prev; buildColHeaders(); }
+  });
+}
+
+/* ── FLAP HELPERS ── */
+function flapChar(ch) {
+  const c = ch === ' ' ? '&nbsp;' : ch;
+  return `<div class="flap"><div class="flap-top"><span class="flap-char">${c}</span></div><div class="flap-bottom"><span class="flap-char">${c}</span></div></div>`;
+}
+function flapStr(str, pad) {
+  return [...str.padEnd(pad,' ').slice(0,pad)].map(flapChar).join('');
+}
+function animateCell(cell) {
+  cell.querySelectorAll('.flap').forEach((f, i) => {
+    setTimeout(() => {
+      f.classList.add('animating');
+      setTimeout(() => f.classList.remove('animating'), 300);
+    }, i * 18);
+  });
+}
+
+/* ── INLINE EDIT ── */
+function openEdit(cell, apptIdx, field, pad) {
+  if (cell.querySelector('.cell-input')) return;
+  const current = appts[apptIdx][field];
+  cell.innerHTML = '';
+  const inp = document.createElement('input');
+  inp.className = 'cell-input';
+  inp.value = current;
+  inp.maxLength = pad;
+  inp.style.width = Math.max(pad * 13 + 12, 60) + 'px';
+  cell.appendChild(inp);
+  inp.focus(); inp.select();
+  function commit() {
+    const val = inp.value.trim().toUpperCase() || current;
+    appts[apptIdx][field] = val;
+    renderCell(cell, val, pad);
+    animateCell(cell);
+  }
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') inp.blur();
+    if (e.key === 'Escape') { appts[apptIdx][field] = current; renderCell(cell, current, pad); }
+  });
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('input', () => { inp.value = inp.value.toUpperCase(); });
+}
+
+function renderCell(cell, str, pad) {
+  cell.innerHTML = flapStr(str, pad);
+}
+
+/* ── BUILD BOARD ── */
+function buildBoard() {
+  const container = document.getElementById('rows');
+  container.innerHTML = '';
+
+  /* Group by time slot */
+  const groups = {};
+  appts.forEach((a, i) => {
+    if (!groups[a.time]) groups[a.time] = [];
+    groups[a.time].push({appt: a, idx: i});
+  });
+
+  /* Find the first time slot >= NOW for "next-up" */
+  const nowMins = NOW_HOUR * 60 + NOW_MIN;
+  let nextUpTime = null;
+  Object.keys(groups).sort().forEach(t => {
+    const [h, m] = t.split(':').map(Number);
+    const mins = h * 60 + m;
+    if (mins >= nowMins && nextUpTime === null) nextUpTime = t;
+  });
+
+  Object.keys(groups).sort().forEach(timeKey => {
+    const group = groups[timeKey];
+    const groupEl = document.createElement('div');
+    groupEl.className = 'time-group';
+    if (timeKey === nextUpTime) groupEl.classList.add('next-up');
+
+    // tick marker
+    const tick = document.createElement('div');
+    tick.className = 'time-group-tick';
+    groupEl.appendChild(tick);
+
+    group.forEach(({appt: a, idx: i}, groupPos) => {
+      const row = document.createElement('div');
+      row.className = 'appt-row' + (a.highlighted ? ' highlighted' : '');
+
+      function makeCell(field, pad) {
+        const cell = document.createElement('div');
+        cell.className = 'flap-cell';
+        cell.innerHTML = flapStr(a[field], pad);
+        cell.addEventListener('click', () => openEdit(cell, i, field, pad));
+        return cell;
+      }
+
+      // Time cell - always visible, always editable
+      const timeWrap = document.createElement('div');
+      timeWrap.className = 'flap-cell';
+      timeWrap.innerHTML = flapStr(a.time, 5);
+      timeWrap.addEventListener('click', () => openEdit(timeWrap, i, 'time', 5));
+
+      // Highlight cell
+      const hlCell = document.createElement('div');
+      hlCell.className = 'highlight-cell';
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.className = 'highlight-check';
+      chk.checked = a.highlighted;
+      chk.id = `hl-${i}`;
+      const lbl = document.createElement('label');
+      lbl.className = 'highlight-label';
+      lbl.htmlFor = `hl-${i}`;
+      lbl.textContent = 'Highlight';
+      chk.addEventListener('change', () => {
+        appts[i].highlighted = chk.checked;
+        row.classList.toggle('highlighted', chk.checked);
+      });
+      hlCell.appendChild(chk);
+      hlCell.appendChild(lbl);
+
+      row.appendChild(timeWrap);
+      row.appendChild(makeCell('price', 6));
+      row.appendChild(makeCell('service', 12));
+      row.appendChild(makeCell('barber', 10));
+      row.appendChild(hlCell);
+
+      groupEl.appendChild(row);
+    });
+
+    container.appendChild(groupEl);
+  });
+}
+
+/* ── CLOCK ── */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('live-time').textContent =
+    String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+}
+
+/* ── AMBIENT FLIP ── */
+function randomFlip() {
+  const flaps = document.querySelectorAll('.appt-row .flap');
+  if (!flaps.length) return;
+  const f = flaps[Math.floor(Math.random() * flaps.length)];
+  f.classList.add('animating');
+  setTimeout(() => f.classList.remove('animating'), 300);
+}
+
+/* ── INIT ── */
+// Render now-row flap cells
+document.getElementById('now-time-flaps').innerHTML    = flapStr(NOW_STR, 5);
+document.getElementById('now-price-flaps').innerHTML   = flapStr('——————', 6);
+document.getElementById('now-service-flaps').innerHTML = flapStr('————————————', 12);
+document.getElementById('now-barber-flaps').innerHTML  = flapStr('——————————', 10);
+buildColHeaders();
+buildBoard();
+updateClock();
+setInterval(updateClock, 10000);
+setInterval(randomFlip, 200);
+
+// Boot sweep
+setTimeout(() => {
+  let i = 0;
+  const all = [...document.querySelectorAll('.flap')];
+  const iv = setInterval(() => {
+    if (i >= all.length) { clearInterval(iv); return; }
+    all.slice(i, i+3).forEach(f => {
+      f.classList.add('animating');
+      setTimeout(() => f.classList.remove('animating'), 300);
+    });
+    i += 3;
+  }, 18);
+}, 200);
+</script>
+</body>
+</html>

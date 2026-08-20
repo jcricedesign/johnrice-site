@@ -1,0 +1,218 @@
+
+<div id="pg" style="background:#f7f7f4;color:#111;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;"></div>
+
+<script>
+(function() {
+
+var SLOTS = ['Now','12:00','12:30','1:00','1:30','2:00','2:30','3:00'];
+
+var BARBERS = [
+  { name:'Marcus K.',  shop:'Shoreline Cuts',      rating:4.9, dist:0.3, avail:[1,0,1,1,0,1,0,0] },
+  { name:'Suki M.',    shop:'Linden Ave Barber',   rating:4.8, dist:0.4, avail:[1,0,0,0,0,1,0,0] },
+  { name:'Jamie L.',   shop:'Bitter Lake Barber',  rating:4.7, dist:0.5, avail:[0,1,0,0,1,0,0,1] },
+  { name:'Rosa A.',    shop:'Crown Barbershop',     rating:4.8, dist:0.8, avail:[0,0,0,1,0,1,0,0] },
+  { name:'Carlos R.',  shop:'Pinehurst Clips',      rating:4.7, dist:1.1, avail:[0,0,1,0,0,0,1,0] },
+  { name:'Devon W.',   shop:'North Gate Cuts',      rating:4.6, dist:1.2, avail:[0,0,0,0,1,0,0,1] }
+];
+
+var activeFilter = 'all';
+
+function e(tag, styles, attrs) {
+  var el = document.createElement(tag);
+  if (styles) el.style.cssText = styles;
+  if (attrs) for (var k in attrs) el[k] = attrs[k];
+  return el;
+}
+function t(str) { return document.createTextNode(str); }
+
+function filteredList() {
+  if (activeFilter === 'now') return BARBERS.filter(function(b){ return b.avail[0] === 1; });
+  if (activeFilter === 'close') return BARBERS.slice().sort(function(a,b){ return a.dist - b.dist; });
+  return BARBERS;
+}
+
+var COL_NAME = 148;
+var COL_W    = 58;
+var NCOLS    = SLOTS.length;
+var GRID_W   = COL_NAME + COL_W * NCOLS;
+
+function buildPage() {
+  var pg = document.getElementById('pg');
+  pg.innerHTML = '';
+
+  /* ── masthead ── */
+  var mh = e('div','border-bottom:2px solid #111;padding:28px 24px 18px;display:flex;justify-content:space-between;align-items:flex-end;');
+  var ml = e('div','');
+  var brand = e('div','font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#6e6e6e;margin-bottom:6px;');
+  brand.appendChild(t('Barbers near you'));
+  var hl = e('div','font-size:42px;font-weight:500;line-height:1;letter-spacing:-0.02em;color:#111;');
+  hl.appendChild(t('Available'));
+  hl.appendChild(document.createElement('br'));
+  hl.appendChild(t('now'));
+  var bar = e('div','width:32px;height:3px;background:#c8001e;margin:10px 0 8px;');
+  var sub = e('div','font-size:13px;color:#6e6e6e;letter-spacing:0.01em;');
+  sub.appendChild(t('Seattle · 98133 · within 5 miles · today'));
+  ml.appendChild(brand); ml.appendChild(hl); ml.appendChild(bar); ml.appendChild(sub);
+
+  var mr = e('div','text-align:right;');
+  var tn = e('div','font-size:32px;font-weight:500;letter-spacing:-0.02em;color:#111;line-height:1;');
+  tn.appendChild(t('11:42'));
+  var tl = e('div','font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#6e6e6e;margin-top:5px;');
+  tl.appendChild(t('Monday'));
+  mr.appendChild(tn); mr.appendChild(tl);
+  mh.appendChild(ml); mh.appendChild(mr);
+  pg.appendChild(mh);
+
+  /* ── filter bar ── */
+  var fb = e('div','display:flex;align-items:stretch;padding:0 24px;border-bottom:1px solid #c0c0bc;');
+  [['all','All barbers'],['now','Available now'],['close','Closest first']].forEach(function(pair, i) {
+    if (i > 0) {
+      var dv = e('div','width:1px;height:14px;background:#c0c0bc;align-self:center;margin:0 2px;');
+      fb.appendChild(dv);
+    }
+    var btn = e('button',
+      'font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;' +
+      'padding:12px 14px 10px;cursor:pointer;border:none;background:none;' +
+      'border-bottom:3px solid ' + (pair[0] === activeFilter ? '#c8001e' : 'transparent') + ';' +
+      'margin-bottom:-1px;color:' + (pair[0] === activeFilter ? '#111' : '#6e6e6e') + ';',
+      { id:'btn-'+pair[0] }
+    );
+    btn.appendChild(t(pair[1]));
+    btn.addEventListener('click', function(f){ return function() {
+      activeFilter = f;
+      buildPage();
+    }; }(pair[0]));
+    fb.appendChild(btn);
+  });
+  pg.appendChild(fb);
+
+  /* ── grid wrapper ── */
+  var gw = e('div','overflow-x:auto;padding:0 24px;');
+  var grid = e('div','width:' + GRID_W + 'px;min-width:' + GRID_W + 'px;');
+
+  /* col headers */
+  var hrow = e('div','display:flex;border-bottom:1px solid #111;padding:10px 0 8px;margin-top:4px;');
+  var hname = e('div','width:' + COL_NAME + 'px;flex-shrink:0;');
+  hrow.appendChild(hname);
+  SLOTS.forEach(function(s, i) {
+    var ch = e('div','width:' + COL_W + 'px;flex-shrink:0;text-align:center;');
+    if (i === 0) {
+      var tick = e('div','width:2px;height:5px;background:#c8001e;margin:0 auto 3px;');
+      ch.appendChild(tick);
+    }
+    var lbl = e('div',
+      'font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;' +
+      'color:' + (i === 0 ? '#c8001e' : '#6e6e6e') + ';'
+    );
+    lbl.appendChild(t(s));
+    ch.appendChild(lbl);
+    hrow.appendChild(ch);
+  });
+  grid.appendChild(hrow);
+
+  /* barber rows */
+  var list = filteredList();
+  if (list.length === 0) {
+    var empty = e('div','padding:32px 0;font-size:13px;color:#6e6e6e;letter-spacing:0.04em;');
+    empty.appendChild(t('No barbers match this filter.'));
+    grid.appendChild(empty);
+  } else {
+    list.forEach(function(b, i) {
+      var isLast = i === list.length - 1;
+      var row = e('div',
+        'display:flex;align-items:center;' +
+        'border-bottom:' + (isLast ? '1px solid #111' : '0.5px solid #c8c8c4') + ';'
+      );
+      row.addEventListener('mouseenter', function(){ this.style.background='rgba(0,0,0,0.02)'; });
+      row.addEventListener('mouseleave', function(){ this.style.background=''; });
+
+      /* identity */
+      var ident = e('div','width:' + COL_NAME + 'px;flex-shrink:0;padding:13px 12px 13px 0;');
+      var num = e('div','font-size:10px;font-weight:500;letter-spacing:0.1em;color:#b8b8b8;text-transform:uppercase;margin-bottom:3px;');
+      num.appendChild(t(String(i+1).padStart(2,'0')));
+      var nm = e('div','font-size:14px;font-weight:500;color:#111;line-height:1.2;');
+      nm.appendChild(t(b.name));
+      var dt = e('div','font-size:11px;color:#6e6e6e;margin-top:2px;');
+      dt.appendChild(t(b.dist.toFixed(1) + ' mi  ·  ★ ' + b.rating));
+      ident.appendChild(num); ident.appendChild(nm); ident.appendChild(dt);
+      row.appendChild(ident);
+
+      /* slots */
+      SLOTS.forEach(function(slot, si) {
+        var cell = e('div','width:' + COL_W + 'px;flex-shrink:0;padding:5px 3px;display:flex;align-items:center;justify-content:center;');
+        var v = b.avail[si];
+        var isNow = si === 0;
+
+        if (v === 1 && isNow) {
+          var btn = e('button','width:100%;height:36px;background:#111;color:#f7f7f4;border:none;cursor:pointer;font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;');
+          btn.appendChild(t('Now'));
+          btn.addEventListener('mouseenter', function(){ this.style.background='#333'; });
+          btn.addEventListener('mouseleave', function(){ this.style.background='#111'; });
+          btn.addEventListener('click', function(bn,sh){ return function(){ showToast(bn,sh,'Now'); }; }(b.name,b.shop));
+          cell.appendChild(btn);
+        } else if (v === 1) {
+          var btn2 = e('button','width:100%;height:36px;background:#e6e6e2;color:#111;border:0.5px solid #b0b0ac;cursor:pointer;font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;');
+          btn2.appendChild(t(slot));
+          btn2.addEventListener('mouseenter', function(){ this.style.background='#d4d4d0'; });
+          btn2.addEventListener('mouseleave', function(){ this.style.background='#e6e6e2'; });
+          btn2.addEventListener('click', function(bn,sh,sl){ return function(){ showToast(bn,sh,sl); }; }(b.name,b.shop,slot));
+          cell.appendChild(btn2);
+        } else {
+          var dash = e('div','width:100%;height:36px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#c0c0bc;');
+          dash.appendChild(t('–'));
+          cell.appendChild(dash);
+        }
+        row.appendChild(cell);
+      });
+      grid.appendChild(row);
+    });
+  }
+
+  gw.appendChild(grid);
+  pg.appendChild(gw);
+
+  /* ── toast ── */
+  var toast = e('div','display:none;margin:0 24px;padding:12px 16px;background:#111;color:#f7f7f4;font-size:12px;font-weight:500;letter-spacing:0.04em;align-items:center;justify-content:space-between;', { id:'toast' });
+  var tmsg = e('span','', { id:'toast-msg' });
+  var tx = e('button','background:none;border:none;color:#f7f7f4;opacity:0.5;cursor:pointer;font-size:14px;padding:0 0 0 16px;');
+  tx.appendChild(t('✕'));
+  tx.addEventListener('click', function(){ hideToast(); });
+  toast.appendChild(tmsg); toast.appendChild(tx);
+  pg.appendChild(toast);
+
+  /* ── legend ── */
+  var leg = e('div','display:flex;align-items:center;gap:24px;padding:14px 24px 22px;');
+  [
+    ['#111','#f7f7f4','Now'],
+    ['#e6e6e2','#111','Open slot'],
+    ['#f7f7f4','#c0c0bc','Busy']
+  ].forEach(function(item) {
+    var li = e('div','display:flex;align-items:center;gap:8px;');
+    var sw = e('div','width:16px;height:16px;background:' + item[0] + ';border:0.5px solid #c0c0bc;flex-shrink:0;');
+    var lb = e('div','font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#6e6e6e;');
+    lb.appendChild(t(item[2]));
+    li.appendChild(sw); li.appendChild(lb);
+    leg.appendChild(li);
+  });
+  pg.appendChild(leg);
+}
+
+var toastTimer;
+function showToast(name, shop, slot) {
+  clearTimeout(toastTimer);
+  var toast = document.getElementById('toast');
+  var msg = document.getElementById('toast-msg');
+  if (!toast || !msg) return;
+  msg.textContent = 'Booked — ' + name + ' · ' + shop + ' · ' + (slot === 'Now' ? 'right now' : slot + ' pm');
+  toast.style.display = 'flex';
+  toastTimer = setTimeout(function(){ hideToast(); }, 4500);
+}
+function hideToast() {
+  var toast = document.getElementById('toast');
+  if (toast) toast.style.display = 'none';
+}
+
+buildPage();
+
+})();
+</script>

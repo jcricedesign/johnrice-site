@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Barbergame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#0F0C09;font-family:'DM Sans',sans-serif}
+:root{
+  --cream:#F5EDD8;--amber:#C8861A;--amber-l:#E8A830;
+  --dark:#0F0C09;--modal-bg:#1C1610;
+  --green:#2E9A52;--tag-bg:#FAF3E0;--tag-border:#B8922A;
+}
+#app{display:flex;flex-direction:column;height:100vh}
+
+header{
+  position:relative;z-index:200;
+  background:#111009;border-bottom:1px solid var(--amber);
+  height:58px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;flex-shrink:0;
+}
+.logo{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--cream);display:flex;align-items:center;gap:9px}
+.logo-sc{display:inline-block;font-size:17px;opacity:.7;animation:snip 5s ease-in-out infinite}
+@keyframes snip{0%,88%,100%{transform:rotate(0)}94%{transform:rotate(-28deg)}}
+.logo em{color:var(--amber);font-style:normal}
+.hcenter{position:absolute;left:50%;transform:translateX(-50%)}
+.loc-tag{font-family:'DM Mono',monospace;font-size:10.5px;color:#907050;background:rgba(200,134,26,.08);border:1px solid rgba(200,134,26,.2);padding:5px 13px;border-radius:20px;display:flex;align-items:center;gap:6px}
+.pdot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.hright{display:flex;align-items:center;gap:7px}
+.live{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:10px;color:var(--green);letter-spacing:.1em;text-transform:uppercase;margin-right:4px}
+.fp{background:transparent;border:1px solid rgba(200,134,26,.3);color:#A08050;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:500;padding:6px 12px;border-radius:20px;cursor:pointer;transition:all .15s}
+.fp:hover,.fp.on{background:rgba(200,134,26,.18);border-color:var(--amber);color:var(--cream)}
+
+#stage{flex:1;position:relative;overflow:hidden;cursor:grab;user-select:none}
+#stage.drag{cursor:grabbing}
+canvas#grid{position:absolute;inset:0;pointer-events:none}
+svg#lines{position:absolute;inset:0;pointer-events:none;overflow:visible}
+#pins{position:absolute;inset:0;pointer-events:none}
+#tags{position:absolute;inset:0}
+
+.htag{position:absolute;cursor:pointer;transform:translate(-50%,-100%);z-index:10;transition:filter .15s}
+.htag:hover{z-index:30;filter:brightness(1.06)}
+.tcard{background:var(--tag-bg);border:1.5px solid var(--tag-border);border-radius:3px;padding:7px 12px 8px;min-width:80px;text-align:center;position:relative;box-shadow:3px 4px 0 rgba(0,0,0,.55)}
+.tcard::before{content:'';position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:var(--tag-border);box-shadow:0 0 0 1.5px #8A6018}
+.thole{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:7px;height:7px;border-radius:50%;background:var(--dark);z-index:1}
+.tprice{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#2A1E08;line-height:1}
+.tname{font-size:9px;font-weight:600;color:#6A4A18;text-transform:uppercase;letter-spacing:.07em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92px}
+.twait{font-size:9px;color:#907050;margin-top:2px;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;gap:3px}
+.wdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.wdot.g{background:var(--green)}.wdot.y{background:#D4901A}.wdot.r{background:#C43A2A}
+.htag:hover .tcard{transform:translateY(-2px) rotate(-.4deg);box-shadow:4px 6px 0 rgba(0,0,0,.65)}
+
+.pin{position:absolute;width:20px;height:20px;transform:translate(-50%,-50%);pointer-events:none}
+.pin-c{position:absolute;inset:0;border-radius:50%;border:2.5px solid #F5EDD8;box-shadow:0 0 0 3px rgba(0,0,0,.4)}
+.pin-r{position:absolute;border-radius:50%;border:1.5px solid transparent;animation:ring 2.4s ease-out infinite}
+@keyframes ring{0%{inset:-4px;opacity:.7}100%{inset:-13px;opacity:0}}
+
+#popup{position:fixed;z-index:400;pointer-events:none;opacity:0;transform:translateY(6px) scale(.97);transition:opacity .18s,transform .18s}
+#popup.show{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+.pop-inner{background:var(--modal-bg);border:1px solid var(--amber);border-radius:10px;width:218px;overflow:hidden;filter:drop-shadow(0 8px 24px rgba(0,0,0,.7))}
+.pop-head{background:rgba(200,134,26,.1);border-bottom:1px solid rgba(200,134,26,.2);padding:11px 14px 10px}
+.pop-nm{font-family:'Playfair Display',serif;font-size:15px;color:var(--cream);font-weight:700;line-height:1.2}
+.pop-addr{font-size:10px;color:#806040;margin-top:2px;font-family:'DM Mono',monospace}
+.pop-body{padding:10px 14px 12px}
+.pop-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:9px}
+.psv{font-size:14px;font-weight:600;color:var(--cream);font-family:'Playfair Display',serif;text-align:center}
+.psl{font-size:9px;color:#706040;text-transform:uppercase;letter-spacing:.06em;font-family:'DM Mono',monospace;text-align:center;margin-top:1px}
+.pop-div{border:none;border-top:1px solid rgba(200,134,26,.18);margin:8px 0}
+.pop-bars{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.pop-b{display:flex;align-items:center;gap:7px}
+.bav{width:22px;height:22px;border-radius:50%;background:rgba(200,134,26,.22);border:1px solid rgba(200,134,26,.45);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:var(--amber);font-family:'DM Mono',monospace;flex-shrink:0}
+.bnm{font-size:11px;font-weight:500;color:var(--cream)}
+.bav2{font-size:9.5px;color:#907050;font-family:'DM Mono',monospace}
+.bav2.now{color:var(--green)}
+.pop-btn{width:100%;background:var(--amber);color:#1A0E00;border:none;border-radius:5px;padding:9px;font-size:11.5px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;transition:background .15s}
+.pop-btn:hover{background:var(--amber-l)}
+
+.mbk{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;backdrop-filter:blur(3px)}
+.mbk.open{opacity:1;pointer-events:all}
+.modal{background:var(--modal-bg);border:1px solid var(--amber);border-radius:14px;width:400px;max-width:92vw;max-height:90vh;overflow-y:auto;padding:26px 24px 22px;position:relative;transform:translateY(14px) scale(.97);transition:transform .22s;scrollbar-width:thin;scrollbar-color:rgba(200,134,26,.3) transparent}
+.mbk.open .modal{transform:translateY(0) scale(1)}
+.mclose{position:absolute;top:13px;right:15px;background:none;border:none;color:#604020;font-size:19px;cursor:pointer;font-family:'DM Mono',monospace;transition:color .15s}
+.mclose:hover{color:var(--cream)}
+.mey{font-family:'DM Mono',monospace;font-size:10px;color:var(--amber);text-transform:uppercase;letter-spacing:.14em;margin-bottom:4px}
+.msh{font-family:'Playfair Display',serif;font-size:23px;font-weight:700;color:var(--cream);line-height:1.1;margin-bottom:3px}
+.mad{font-size:11px;color:#806040;font-family:'DM Mono',monospace;margin-bottom:18px}
+.mlbl{display:block;font-size:10px;font-family:'DM Mono',monospace;color:#706040;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+.msec{margin-bottom:16px}
+.bgrid{display:flex;gap:7px;flex-wrap:wrap}
+.bopt{display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(200,134,26,.06);border:1px solid rgba(200,134,26,.2);border-radius:10px;padding:9px 13px;cursor:pointer;transition:all .15s;min-width:74px}
+.bopt:hover{background:rgba(200,134,26,.14);border-color:rgba(200,134,26,.5)}
+.bopt.sel{background:rgba(200,134,26,.22);border-color:var(--amber)}
+.bopt .av{width:34px;height:34px;border-radius:50%;background:rgba(200,134,26,.2);border:1.5px solid rgba(200,134,26,.4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--amber);font-family:'DM Mono',monospace}
+.bopt.sel .av{background:rgba(200,134,26,.32);border-color:var(--amber)}
+.bopt .bn{font-size:10px;color:var(--cream);text-align:center;font-weight:500}
+.bopt .ba{font-size:9px;color:#907050;font-family:'DM Mono',monospace}
+.bopt.sel .ba{color:var(--green)}
+.slist{display:flex;flex-direction:column;gap:5px}
+.sitem{display:flex;align-items:center;justify-content:space-between;background:rgba(200,134,26,.06);border:1px solid rgba(200,134,26,.15);border-radius:7px;padding:9px 12px;cursor:pointer;transition:all .15s}
+.sitem:hover{background:rgba(200,134,26,.12)}
+.sitem.sel{background:rgba(200,134,26,.18);border-color:var(--amber)}
+.snm{font-size:12.5px;color:var(--cream);font-weight:500}
+.sdur{font-size:10px;color:#706040;font-family:'DM Mono',monospace}
+.spr{font-family:'Playfair Display',serif;font-size:15px;color:var(--amber);font-weight:700}
+.schk{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(200,134,26,.3);display:flex;align-items:center;justify-content:center;font-size:9px;color:transparent;transition:all .15s;flex-shrink:0;margin-left:8px}
+.sitem.sel .schk{background:var(--amber);border-color:var(--amber);color:#1A0E00}
+.tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.tslot{background:rgba(200,134,26,.07);border:1px solid rgba(200,134,26,.18);border-radius:5px;padding:8px 4px;text-align:center;font-size:11px;color:#907050;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s}
+.tslot:hover{background:rgba(200,134,26,.18);border-color:rgba(200,134,26,.5);color:var(--cream)}
+.tslot.soon{border-color:rgba(46,154,82,.5);color:var(--green)}
+.tslot.sel{background:rgba(200,134,26,.25);border-color:var(--amber);color:var(--cream)}
+.msum{background:rgba(200,134,26,.08);border:1px solid rgba(200,134,26,.2);border-radius:8px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}
+.sum-lbl{font-size:11px;color:#806040;font-family:'DM Mono',monospace}
+.sum-tot{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--cream)}
+.sum-sub{font-size:9.5px;color:#907050;font-family:'DM Mono',monospace;margin-top:1px}
+.bcta{width:100%;background:var(--amber);color:#1A0E00;border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:.07em;text-transform:uppercase;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px}
+.bcta:hover{background:var(--amber-l)}
+.bcta:active{transform:scale(.99)}
+
+.legend{position:absolute;bottom:18px;right:16px;z-index:100;background:rgba(9,7,4,.88);border:1px solid rgba(200,134,26,.22);border-radius:8px;padding:9px 13px;font-family:'DM Mono',monospace;font-size:10px;color:#907050}
+.lrow{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.lrow:last-child{margin-bottom:0}
+.ldot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hint{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(9,7,4,.75);border:1px solid rgba(200,134,26,.18);border-radius:20px;padding:6px 15px;font-family:'DM Mono',monospace;font-size:10px;color:#705030;pointer-events:none;white-space:nowrap;animation:hfade 5s 2.5s forwards}
+@keyframes hfade{to{opacity:0}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="logo"><span class="logo-sc">&#9988;</span>The <em>&nbsp;Barber</em>game</div>
+  <div class="hcenter"><div class="loc-tag"><div class="pdot"></div>Seattle, WA &middot; 3 mi radius</div></div>
+  <div class="hright">
+    <div class="live"><div class="pdot"></div>Live</div>
+    <button class="fp on" onclick="this.classList.toggle('on')">Open Now</button>
+    <button class="fp" onclick="this.classList.toggle('on')">Under $30</button>
+    <button class="fp" onclick="this.classList.toggle('on')">Walk-In</button>
+    <button class="fp" onclick="this.classList.toggle('on')">Top Rated</button>
+  </div>
+</header>
+<div id="stage">
+  <canvas id="grid"></canvas>
+  <svg id="lines" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div id="pins"></div>
+  <div id="tags"></div>
+  <div class="legend">
+    <div class="lrow"><div class="ldot" style="background:#2E9A52"></div>Available now</div>
+    <div class="lrow"><div class="ldot" style="background:#D4901A"></div>Short wait</div>
+    <div class="lrow"><div class="ldot" style="background:#C43A2A"></div>Busy</div>
+  </div>
+  <div class="hint">Drag to explore &middot; Hover tags &middot; Click to book</div>
+</div>
+</div>
+
+<div id="popup">
+  <div class="pop-inner">
+    <div class="pop-head"><div class="pop-nm" id="pnm"></div><div class="pop-addr" id="padr"></div></div>
+    <div class="pop-body">
+      <div class="pop-stats">
+        <div><div class="psv" id="ppr"></div><div class="psl">From</div></div>
+        <div><div class="psv" id="pwt"></div><div class="psl">Wait</div></div>
+        <div><div class="psv" id="prt"></div><div class="psl">Rating</div></div>
+      </div>
+      <hr class="pop-div">
+      <div class="pop-bars" id="pbar"></div>
+      <button class="pop-btn" id="pbtn">Book Now &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbk" id="mbk">
+  <div class="modal" id="modal">
+    <button class="mclose" id="mclose">&#x2715;</button>
+    <div class="mey">Book your cut</div>
+    <div class="msh" id="msh"></div>
+    <div class="mad" id="mad"></div>
+    <div class="msec"><span class="mlbl">Choose your barber</span><div class="bgrid" id="mbar"></div></div>
+    <div class="msec"><span class="mlbl">Service</span><div class="slist" id="msvc"></div></div>
+    <div class="msec"><span class="mlbl">Today's availability</span><div class="tgrid" id="mtim"></div></div>
+    <div class="msum">
+      <div><div class="sum-lbl">Total</div><div class="sum-tot" id="mtot">$&mdash;</div><div class="sum-sub" id="msub">Select service + time</div></div>
+      <div style="text-align:right"><div class="sum-lbl">Distance</div><div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--cream)" id="mdist"></div><div class="sum-sub" id="mwsub"></div></div>
+    </div>
+    <button class="bcta" onclick="confirmBook()"><span>Confirm &amp; Book</span><span>&rarr;</span></button>
+  </div>
+</div>
+
+<script>
+const SHOPS=[
+  {id:0,name:"Kings Row Cuts",addr:"412 Pike St, Capitol Hill",x:.42,y:.50,price:28,wait:"~5 min",ws:"g",rating:4.9,dist:"0.4 mi",
+   services:[{name:"Classic Haircut",dur:"30 min",price:28},{name:"Fade + Lineup",dur:"45 min",price:35},{name:"Full Service",dur:"60 min",price:50}],
+   barbers:[{init:"JM",name:"Jose M.",avail:"Now",s:"now"},{init:"DK",name:"Dan K.",avail:"12 min",s:""}]},
+  {id:1,name:"Fade Factory",addr:"819 Eastlake Ave E",x:.61,y:.36,price:35,wait:"~12 min",ws:"y",rating:4.8,dist:"1.1 mi",
+   services:[{name:"Fresh Fade",dur:"40 min",price:35},{name:"Fade + Beard",dur:"55 min",price:48},{name:"Shape Up",dur:"20 min",price:22}],
+   barbers:[{init:"AL",name:"Amir L.",avail:"Now",s:"now"},{init:"TR",name:"Tony R.",avail:"Now",s:"now"},{init:"BW",name:"Ben W.",avail:"20 min",s:""}]},
+  {id:2,name:"The Gentleman's Quarter",addr:"2204 N 45th St, Wallingford",x:.25,y:.20,price:45,wait:"~20 min",ws:"y",rating:5.0,dist:"2.1 mi",
+   services:[{name:"Signature Cut",dur:"45 min",price:45},{name:"Cut + Hot Towel",dur:"75 min",price:75},{name:"Beard Sculpt",dur:"30 min",price:35}],
+   barbers:[{init:"PH",name:"Phil H.",avail:"Now",s:"now"},{init:"SC",name:"Sam C.",avail:"35 min",s:""}]},
+  {id:3,name:"Classic Cuts",addr:"1105 Madison St",x:.67,y:.58,price:22,wait:"Now",ws:"g",rating:4.7,dist:"0.7 mi",
+   services:[{name:"Basic Cut",dur:"25 min",price:22},{name:"Cut + Beard Trim",dur:"40 min",price:30}],
+   barbers:[{init:"MV",name:"Marco V.",avail:"Now",s:"now"},{init:"ES",name:"Elena S.",avail:"Now",s:"now"}]},
+  {id:4,name:"Sharp & Clean",addr:"3301 Fremont Ave N",x:.16,y:.44,price:32,wait:"~8 min",ws:"g",rating:4.8,dist:"1.8 mi",
+   services:[{name:"Haircut",dur:"35 min",price:32},{name:"Fade",dur:"40 min",price:38},{name:"Kids Cut",dur:"20 min",price:18}],
+   barbers:[{init:"LG",name:"Luis G.",avail:"Now",s:"now"},{init:"KB",name:"Kyle B.",avail:"15 min",s:""}]},
+  {id:5,name:"Burnside Barbers",addr:"510 Broadway E",x:.52,y:.70,price:38,wait:"~25 min",ws:"r",rating:4.6,dist:"0.9 mi",
+   services:[{name:"Cut & Style",dur:"50 min",price:38},{name:"Scissor Cut",dur:"45 min",price:42}],
+   barbers:[{init:"NT",name:"Nate T.",avail:"Now",s:"now"},{init:"RD",name:"Rick D.",avail:"30 min",s:""}]},
+  {id:6,name:"The Lineup",addr:"622 Queen Anne Ave N",x:.30,y:.60,price:30,wait:"~3 min",ws:"g",rating:4.9,dist:"1.4 mi",
+   services:[{name:"Line Up",dur:"30 min",price:30},{name:"Full Cut + Line",dur:"50 min",price:42},{name:"Beard Line",dur:"20 min",price:20}],
+   barbers:[{init:"OA",name:"Omar A.",avail:"Now",s:"now"},{init:"JF",name:"Jake F.",avail:"Now",s:"now"}]},
+];
+
+const TAG_OFF=[{dx:72,dy:-82},{dx:82,dy:-68},{dx:-68,dy:-80},{dx:76,dy:-66},{dx:-62,dy:-72},{dx:68,dy:-78},{dx:-65,dy:-70}];
+const SC={g:'#2E9A52',y:'#D4901A',r:'#C43A2A'};
+
+let ox=0,oy=0,pdx=0,pdy=0,dragging=false,sx=0,sy=0;
+const stage=document.getElementById('stage');
+const gc=document.getElementById('grid');
+const lsvg=document.getElementById('lines');
+const pinsD=document.getElementById('pins');
+const tagsD=document.getElementById('tags');
+
+function W(){return stage.clientWidth}
+function H(){return stage.clientHeight}
+
+function rr(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+}
+
+function drawGrid(){
+  const w=W(),h=H(),dpr=Math.min(devicePixelRatio,2);
+  gc.width=w*dpr;gc.height=h*dpr;
+  gc.style.width=w+'px';gc.style.height=h+'px';
+  const ctx=gc.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0F0C09';ctx.fillRect(0,0,w,h);
+
+  const vc=[.08,.16,.22,.30,.36,.42,.50,.57,.63,.71,.77,.84,.91,.96];
+  const hr=[.07,.15,.22,.30,.36,.44,.52,.58,.66,.74,.82,.88,.94];
+  const majV=[.22,.42,.63,.84],artV=[.36,.57];
+  const majH=[.22,.44,.66,.88],artH=[.30,.58];
+
+  vc.forEach(x=>{
+    const px=x*w+ox%w-(ox%w>w/2?w:0);
+    // tile horizontally
+    for(let tx2=px%w-(px%w<0?w:0);tx2<w;tx2+=w){
+      const isA=artV.includes(x),isM=majV.includes(x);
+      ctx.strokeStyle=isA?'rgba(58,46,18,1)':isM?'rgba(44,35,14,1)':'rgba(30,24,10,1)';
+      ctx.lineWidth=isA?1.8:isM?1.1:.65;
+      ctx.beginPath();ctx.moveTo(tx2,0);ctx.lineTo(tx2,h);ctx.stroke();
+    }
+  });
+  hr.forEach(y=>{
+    const py=y*h+oy%h-(oy%h>h/2?h:0);
+    for(let ty2=py%h-(py%h<0?h:0);ty2<h;ty2+=h){
+      const isA=artH.includes(y),isM=majH.includes(y);
+      ctx.strokeStyle=isA?'rgba(58,46,18,1)':isM?'rgba(44,35,14,1)':'rgba(30,24,10,1)';
+      ctx.lineWidth=isA?1.8:isM?1.1:.65;
+      ctx.beginPath();ctx.moveTo(0,ty2);ctx.lineTo(w,ty2);ctx.stroke();
+    }
+  });
+
+  // Parks
+  [{x:.24,y:.28,w:.10,h:.08},{x:.58,y:.36,w:.08,h:.06},{x:.44,y:.68,w:.09,h:.07},{x:.70,y:.20,w:.07,h:.06}].forEach(p=>{
+    ctx.fillStyle='rgba(14,26,10,1)';ctx.strokeStyle='rgba(22,42,14,.7)';ctx.lineWidth=.8;
+    rr(ctx,p.x*w+ox,p.y*h+oy,p.w*w,p.h*h,4);ctx.fill();ctx.stroke();
+  });
+
+  // Lake
+  ctx.fillStyle='rgba(6,12,20,1)';ctx.strokeStyle='rgba(10,18,32,.5)';ctx.lineWidth=1;
+  rr(ctx,.60*w+ox,.06*h+oy,.24*w,.20*h,10);ctx.fill();ctx.stroke();
+
+  // Labels
+  ctx.font="bold 9px 'DM Mono',monospace";ctx.textAlign='center';
+  [{t:'CAPITOL HILL',x:.50,y:.46},{t:'EASTLAKE',x:.62,y:.30},{t:'WALLINGFORD',x:.24,y:.16},
+   {t:'FREMONT',x:.15,y:.40},{t:'QUEEN ANNE',x:.30,y:.56},{t:'BROADWAY',x:.55,y:.65},
+   {t:'FIRST HILL',x:.69,y:.54},{t:'LAKE UNION',x:.72,y:.16}].forEach(n=>{
+    ctx.fillStyle='rgba(160,120,50,.18)';
+    ctx.fillText(n.t,n.x*w+ox,n.y*h+oy);
+  });
+}
+
+function buildMarkers(){
+  pinsD.innerHTML='';tagsD.innerHTML='';lsvg.innerHTML='';
+  const w=W(),h=H();
+  SHOPS.forEach((s,i)=>{
+    const px=s.x*w+ox,py=s.y*h+oy;
+    const off=TAG_OFF[i],tx=px+off.dx,ty=py+off.dy;
+    const col=SC[s.ws]||'#2E9A52';
+
+    const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+    ln.setAttribute('x1',px);ln.setAttribute('y1',py);
+    ln.setAttribute('x2',tx);ln.setAttribute('y2',ty+30);
+    ln.setAttribute('stroke','rgba(200,134,26,.42)');
+    ln.setAttribute('stroke-width','1.2');
+    ln.setAttribute('stroke-dasharray','4 3');
+    lsvg.appendChild(ln);
+
+    const pin=document.createElement('div');
+    pin.className='pin';pin.style.cssText='left:'+px+'px;top:'+py+'px';
+    pin.innerHTML='<div class="pin-c" style="background:'+col+'"></div><div class="pin-r" style="border-color:'+col+'60;animation-delay:'+(i*.28)+'s"></div>';
+    pinsD.appendChild(pin);
+
+    const tag=document.createElement('div');
+    tag.className='htag';tag.style.cssText='left:'+tx+'px;top:'+ty+'px';tag.dataset.id=s.id;
+    tag.innerHTML='<div class="tcard"><div class="thole"></div><div class="tprice">$'+s.price+'</div><div class="tname">'+s.name+'</div><div class="twait"><span class="wdot '+s.ws+'"></span>'+s.wait+'</div></div>';
+    tagsD.appendChild(tag);
+
+    tag.addEventListener('mouseenter',()=>showPopup(s,tx,ty));
+    tag.addEventListener('mouseleave',()=>schedHide());
+    tag.addEventListener('click',()=>openModal(s));
+  });
+}
+
+function updatePos(){
+  const w=W(),h=H();
+  lsvg.innerHTML='';
+  SHOPS.forEach((s,i)=>{
+    const px=s.x*w+ox,py=s.y*h+oy;
+    const off=TAG_OFF[i],tx=px+off.dx,ty=py+off.dy;
+    pinsD.children[i].style.left=px+'px';pinsD.children[i].style.top=py+'px';
+    tagsD.children[i].style.left=tx+'px';tagsD.children[i].style.top=ty+'px';
+    const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+    ln.setAttribute('x1',px);ln.setAttribute('y1',py);
+    ln.setAttribute('x2',tx);ln.setAttribute('y2',ty+30);
+    ln.setAttribute('stroke','rgba(200,134,26,.42)');
+    ln.setAttribute('stroke-width','1.2');
+    ln.setAttribute('stroke-dasharray','4 3');
+    lsvg.appendChild(ln);
+  });
+}
+
+// Pan
+stage.addEventListener('mousedown',e=>{
+  if(e.target.closest('.htag')||e.target.closest('#popup'))return;
+  dragging=true;sx=e.clientX;sy=e.clientY;pdx=ox;pdy=oy;stage.classList.add('drag');
+});
+document.addEventListener('mousemove',e=>{
+  if(!dragging)return;
+  ox=pdx+(e.clientX-sx);oy=pdy+(e.clientY-sy);drawGrid();updatePos();
+});
+document.addEventListener('mouseup',()=>{dragging=false;stage.classList.remove('drag')});
+stage.addEventListener('touchstart',e=>{
+  if(e.target.closest('.htag'))return;
+  const t=e.touches[0];dragging=true;sx=t.clientX;sy=t.clientY;pdx=ox;pdy=oy;
+},{passive:true});
+document.addEventListener('touchmove',e=>{
+  if(!dragging)return;
+  const t=e.touches[0];ox=pdx+(t.clientX-sx);oy=pdy+(t.clientY-sy);drawGrid();updatePos();
+},{passive:true});
+document.addEventListener('touchend',()=>{dragging=false});
+
+// Popup
+const popup=document.getElementById('popup');
+let hideT=null,actId=null;
+popup.addEventListener('mouseenter',()=>clearTimeout(hideT));
+popup.addEventListener('mouseleave',()=>schedHide());
+document.getElementById('pbtn').addEventListener('click',()=>{
+  if(actId!==null)openModal(SHOPS.find(s=>s.id===actId));
+});
+function showPopup(sh,tx,ty){
+  clearTimeout(hideT);actId=sh.id;
+  document.getElementById('pnm').textContent=sh.name;
+  document.getElementById('padr').textContent=sh.addr;
+  document.getElementById('ppr').textContent='$'+sh.price;
+  document.getElementById('pwt').textContent=sh.wait;
+  document.getElementById('prt').textContent='&#9733; '+sh.rating;
+  document.getElementById('pbar').innerHTML=sh.barbers.map(b=>'<div class="pop-b"><div class="bav">'+b.init+'</div><div><div class="bnm">'+b.name+'</div><div class="bav2 '+b.s+'">'+b.avail+'</div></div></div>').join('');
+  const sr=stage.getBoundingClientRect();
+  let l=sr.left+tx+14,t2=sr.top+ty-10;
+  if(l+234>window.innerWidth)l=sr.left+tx-248;
+  if(t2+265>window.innerHeight)t2=window.innerHeight-275;
+  if(t2<65)t2=65;
+  popup.style.left=l+'px';popup.style.top=t2+'px';popup.classList.add('show');
+}
+function schedHide(){hideT=setTimeout(()=>{popup.classList.remove('show');actId=null},220)}
+
+// Modal
+let curShop=null,selB={},selS={},selT={};
+const TIMES=['9:00','9:30','10:00','10:30','11:00','11:30','12:00','12:30','1:00','1:30','2:00','2:30','3:00','3:30','4:00','4:30'];
+const SOON=[0,1,2];
+
+function openModal(sh){
+  curShop=sh;popup.classList.remove('show');
+  if(selB[sh.id]===undefined)selB[sh.id]=0;
+  if(selS[sh.id]===undefined)selS[sh.id]=0;
+  if(selT[sh.id]===undefined)selT[sh.id]=0;
+  document.getElementById('msh').textContent=sh.name;
+  document.getElementById('mad').textContent=sh.addr;
+  document.getElementById('mdist').textContent=sh.dist;
+  document.getElementById('mwsub').textContent='Wait: '+sh.wait;
+  rBars(sh);rSvcs(sh);rTims(sh);updTot(sh);
+  document.getElementById('mbk').classList.add('open');
+}
+function rBars(sh){
+  document.getElementById('mbar').innerHTML=sh.barbers.map((b,j)=>'<div class="bopt '+(j===selB[sh.id]?'sel':'')+'" onclick="pB('+sh.id+','+j+')"><div class="av">'+b.init+'</div><div class="bn">'+b.name+'</div><div class="ba">'+b.avail+'</div></div>').join('');
+}
+function rSvcs(sh){
+  document.getElementById('msvc').innerHTML=sh.services.map((s,j)=>'<div class="sitem '+(j===selS[sh.id]?'sel':'')+'" onclick="pS('+sh.id+','+j+')"><div><div class="snm">'+s.name+'</div><div class="sdur">'+s.dur+'</div></div><div style="display:flex;align-items:center;gap:6px"><div class="spr">$'+s.price+'</div><div class="schk">'+(j===selS[sh.id]?'&#10003;':'')+'</div></div></div>').join('');
+}
+function rTims(sh){
+  document.getElementById('mtim').innerHTML=TIMES.map((t,j)=>'<div class="tslot'+(SOON.includes(j)?' soon':'')+(j===selT[sh.id]?' sel':'')+'" onclick="pT('+sh.id+','+j+')">'+t+'</div>').join('');
+}
+function updTot(sh){
+  const s=sh.services[selS[sh.id]||0],b=sh.barbers[selB[sh.id]||0];
+  document.getElementById('mtot').textContent='$'+s.price;
+  document.getElementById('msub').textContent=s.dur+' \u00b7 '+b.name;
+}
+window.pB=function(sid,j){selB[sid]=j;const sh=SHOPS.find(s=>s.id===sid);rBars(sh);updTot(sh)};
+window.pS=function(sid,j){selS[sid]=j;const sh=SHOPS.find(s=>s.id===sid);rSvcs(sh);updTot(sh)};
+window.pT=function(sid,j){selT[sid]=j;const sh=SHOPS.find(s=>s.id===sid);rTims(sh)};
+window.confirmBook=function(){
+  if(!curShop)return;
+  const sh=curShop,b=sh.barbers[selB[sh.id]||0],s=sh.services[selS[sh.id]||0],t=TIMES[selT[sh.id]||0];
+  document.getElementById('modal').innerHTML='<div style="text-align:center;padding:20px 0 8px"><div style="font-size:40px;margin-bottom:14px">&#9988;</div><div style="font-family:\'Playfair Display\',serif;font-size:23px;color:var(--cream);font-weight:700;margin-bottom:5px">You\'re booked!</div><div style="font-size:11px;color:#907050;font-family:\'DM Mono\',monospace;margin-bottom:20px">'+sh.name+'</div><div style="background:rgba(200,134,26,.08);border:1px solid rgba(200,134,26,.22);border-radius:10px;padding:15px;margin-bottom:16px;text-align:left">'+[['Barber',b.name],['Service',s.name],['Time',t+' today']].map(([l,v])=>'<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;color:#907050;font-family:\'DM Mono\',monospace">'+l+'</span><span style="font-size:12px;color:var(--cream);font-weight:500">'+v+'</span></div>').join('')+'<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(200,134,26,.2);padding-top:8px;margin-top:4px"><span style="font-size:11px;color:#907050;font-family:\'DM Mono\',monospace">Total</span><span style="font-family:\'Playfair Display\',serif;font-size:18px;color:var(--amber)">$'+s.price+'</span></div></div><div style="font-size:11px;color:#605040;font-family:\'DM Mono\',monospace;margin-bottom:18px">Confirmation sent via SMS</div><button onclick="document.getElementById(\'mbk\').classList.remove(\'open\')" style="background:transparent;border:1px solid rgba(200,134,26,.3);color:#906030;font-size:11px;padding:9px 22px;border-radius:20px;cursor:pointer;font-family:\'DM Mono\',monospace;letter-spacing:.08em">Close</button></div>';
+};
+document.getElementById('mclose').addEventListener('click',()=>document.getElementById('mbk').classList.remove('open'));
+document.getElementById('mbk').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open')});
+
+window.addEventListener('resize',()=>{drawGrid();updatePos()});
+drawGrid();buildMarkers();
+</script>
+</body>
+</html>
