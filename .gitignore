@@ -1,0 +1,7 @@
+.DS_Store
+github-recovery-codes.txt
+*recovery-codes*
+*.env
+
+# staged for removal — never commit
+_to_delete/
