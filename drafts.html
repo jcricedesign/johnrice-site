@@ -6,7 +6,6 @@
   <meta name="description" content="Experiments, drafts, and prototypes by John Rice.">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://www.johnrice.com/drafts.html">
-
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.johnrice.com/drafts.html">
   <meta property="og:title" content="Drafts — Prototypes & experiments by John Rice">
@@ -23,352 +22,42 @@
   <link rel="shortcut icon" href="assets/favicon/favicon.ico">
   <meta name="theme-color" content="#0d0d0c">
   <link rel="stylesheet" href="site-common.css">
-
   <style>
-    .draft-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 1px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-grid);
-      overflow: hidden;
-    }
-
-    .draft-card {
-      background: var(--bg-surface);
-      display: flex;
-      flex-direction: column;
-      transition: background 0.15s;
-    }
-    .draft-card:hover { background: var(--bg-surface2); }
-
-    .draft-preview-wrap {
-      position: relative;
-      aspect-ratio: 16 / 10;
-      overflow: hidden;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .draft-preview {
-      position: absolute;
-      top: 0; left: 0;
-      width: 1280px; height: 800px;
-      border: 0;
-      transform: scale(0.1875);
-      transform-origin: top left;
-      pointer-events: none;
-    }
-
-    @media (max-width: 479px) {
-      .draft-preview { transform: scale(0.165); }
-      .draft-grid { grid-template-columns: 1fr 1fr; }
-    }
-
-    .draft-card-body {
-      padding: 12px 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .draft-name {
-      font-size: 12px;
-      font-weight: 400;
-      color: var(--muted);
-      letter-spacing: 0.02em;
-      font-family: monospace;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      min-width: 0;
-    }
-
-    .draft-open {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--hint);
-      text-decoration: none;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      transition: color 0.15s;
-      flex-shrink: 0;
-    }
-    .draft-open:hover { color: var(--white); }
+    .draft-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;border:1px solid var(--border);border-radius:var(--radius-grid);overflow:hidden}
+    .draft-card{background:var(--bg-surface);display:flex;flex-direction:column;transition:background .15s}.draft-card:hover{background:var(--bg-surface2)}
+    .draft-preview-wrap{position:relative;aspect-ratio:16/10;overflow:hidden;background:var(--bg);border-bottom:1px solid var(--border)}
+    .draft-preview{position:absolute;top:0;left:0;width:1280px;height:800px;border:0;transform:scale(.1875);transform-origin:top left;pointer-events:none}
+    @media(max-width:479px){.draft-preview{transform:scale(.165)}.draft-grid{grid-template-columns:1fr 1fr}}
+    .draft-card-body{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}.draft-name{font-size:12px;font-weight:400;color:var(--muted);letter-spacing:.02em;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.draft-open{font-size:11px;font-weight:500;color:var(--hint);text-decoration:none;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;transition:color .15s;flex-shrink:0}.draft-open:hover{color:var(--white)}
   </style>
-
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-3GHKKVW3V1"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-3GHKKVW3V1');</script>
 </head>
 <body>
-
 <a href="#main" class="skip-link">Skip to content</a>
-<nav class="site-nav" role="navigation" aria-label="Main navigation">
-  <div class="site-container">
-    <a href="index.html" class="nav-logo" aria-label="John Rice — home">
-      <img src="assets/img/assorted/JCR_sigil.png" alt="" class="sigil">
-      <img src="assets/img/assorted/johnrice-logo-white.svg" alt="John Rice">
-    </a>
+<nav class="site-nav" role="navigation" aria-label="Main navigation"><div class="site-container"><a href="index.html" class="nav-logo" aria-label="John Rice — home"><img src="assets/img/assorted/JCR_sigil.png" alt="" class="sigil"><img src="assets/img/assorted/johnrice-logo-white.svg" alt="John Rice"></a><div class="nav-group desktop"><ul class="nav-links" role="list"><li><a href="work.html">Work</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li></ul><div class="nav-more"><button type="button" class="nav-more-btn" id="more-btn" aria-expanded="false" aria-controls="more-panel">More <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button><ul class="nav-more-panel" id="more-panel" role="list"><li><a href="case-study.html">The Barber Game<span class="meta">Full case study</span></a></li><li><a href="drafts.html">Drafts<span class="meta">Prototypes &amp; experiments</span></a></li></ul></div></div><a href="assets/pdf/john-rice-resume-2026.pdf" class="nav-cta desktop" target="_blank" rel="noopener">Résumé</a><button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-drawer"><span></span><span></span><span></span></button></div></nav>
+<div class="nav-drawer" id="nav-drawer" role="dialog" aria-modal="true" aria-label="Menu"><ul class="nav-links" role="list"><li><a href="work.html">Work</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li></ul><p class="drawer-label">More</p><ul class="nav-links" role="list"><li><a href="case-study.html">The Barber Game</a></li><li><a href="drafts.html">Drafts</a></li></ul><a href="assets/pdf/john-rice-resume-2026.pdf" class="btn-primary-jcr nav-cta" target="_blank" rel="noopener">Download résumé</a></div>
+<main id="main"><section class="page-content"><div class="site-container"><div class="prose-col" style="margin-bottom:48px"><p class="section-label">Drafts</p><h1 style="margin-bottom:12px">Experiments &amp; prototypes</h1><p>In-progress ideas, playful interactions, and rough builds.</p></div><div class="draft-grid">
 
-    <div class="nav-group desktop">
-      <ul class="nav-links" role="list">
-        <li><a href="work.html">Work</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="contact.html">Contact</a></li>
-      </ul>
-      <div class="nav-more">
-        <button type="button" class="nav-more-btn" id="more-btn" aria-expanded="false" aria-controls="more-panel">
-          More
-          <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-        </button>
-        <ul class="nav-more-panel" id="more-panel" role="list">
-          <li><a href="case-study.html">The Barber Game<span class="meta">Full case study</span></a></li>
-          <li><a href="drafts.html">Drafts<span class="meta">Prototypes &amp; experiments</span></a></li>
-        </ul>
-      </div>
-    </div>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="barbergame-onboarding.html" loading="lazy" title="Barbergame Barber Onboarding" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">barbergame-onboarding.html</span><a class="draft-open" href="barbergame-onboarding.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="clock.html" loading="lazy" title="Clock" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">clock.html</span><a class="draft-open" href="clock.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="destroy.html" loading="lazy" title="Destroy" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">destroy.html</span><a class="draft-open" href="destroy.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="mondrian.html" loading="lazy" title="Mondrian" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">mondrian.html</span><a class="draft-open" href="mondrian.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="haiku.html" loading="lazy" title="Haiku" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">haiku.html</span><a class="draft-open" href="haiku.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="plinko.html" loading="lazy" title="Plinko" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">plinko.html</span><a class="draft-open" href="plinko.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="spacelanes.html" loading="lazy" title="Spacelanes" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">spacelanes.html</span><a class="draft-open" href="spacelanes.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="video.html" loading="lazy" title="Video" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">video.html</span><a class="draft-open" href="video.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="visualizer.html" loading="lazy" title="Visualizer" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">visualizer.html</span><a class="draft-open" href="visualizer.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="barber.html" loading="lazy" title="Barber" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">barber.html</span><a class="draft-open" href="barber.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="barber2.html?v=20260325" loading="lazy" title="Barber 2" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">barber2.html</span><a class="draft-open" href="barber2.html?v=20260325">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="barber3.html" loading="lazy" title="Barber 3" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">barber3.html</span><a class="draft-open" href="barber3.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="barber-swiss.html" loading="lazy" title="Barber Swiss" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">barber-swiss.html</span><a class="draft-open" href="barber-swiss.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="barber-matrix.html" loading="lazy" title="Barber Matrix" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">barber-matrix.html</span><a class="draft-open" href="barber-matrix.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="letters.html" loading="lazy" title="Letters" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">letters.html</span><a class="draft-open" href="letters.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="voice.html" loading="lazy" title="Voice" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">voice.html</span><a class="draft-open" href="voice.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="crow.html" loading="lazy" title="Crow" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">crow.html</span><a class="draft-open" href="crow.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="type.html" loading="lazy" title="Type" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">type.html</span><a class="draft-open" href="type.html">Open ↗</a></div></article>
+<article class="draft-card"><div class="draft-preview-wrap"><iframe class="draft-preview" src="backup-mind.html" loading="lazy" title="Backup Mind" aria-hidden="true" tabindex="-1"></iframe></div><div class="draft-card-body"><span class="draft-name">backup-mind.html</span><a class="draft-open" href="backup-mind.html">Open ↗</a></div></article>
 
-    <a href="assets/pdf/john-rice-resume-2026.pdf" class="nav-cta desktop" target="_blank" rel="noopener">Résumé</a>
-
-    <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-drawer">
-      <span></span><span></span><span></span>
-    </button>
-  </div>
-</nav>
-
-<div class="nav-drawer" id="nav-drawer" role="dialog" aria-modal="true" aria-label="Menu">
-  <ul class="nav-links" role="list">
-    <li><a href="work.html">Work</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="contact.html">Contact</a></li>
-  </ul>
-  <p class="drawer-label">More</p>
-  <ul class="nav-links" role="list">
-    <li><a href="case-study.html">The Barber Game</a></li>
-    <li><a href="drafts.html">Drafts</a></li>
-  </ul>
-  <a href="assets/pdf/john-rice-resume-2026.pdf" class="btn-primary-jcr nav-cta" target="_blank" rel="noopener">Download résumé</a>
-</div>
-
-<main id="main">
-  <section class="page-content">
-    <div class="site-container">
-
-      <div class="prose-col" style="margin-bottom: 48px;">
-        <p class="section-label">Drafts</p>
-        <h1 style="margin-bottom: 12px;">Experiments &amp; prototypes</h1>
-        <p>In-progress ideas, playful interactions, and rough builds.</p>
-      </div>
-
-      <div class="draft-grid">
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="clock.html" loading="lazy" title="Clock" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">clock.html</span>
-            <a class="draft-open" href="clock.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="destroy.html" loading="lazy" title="Destroy" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">destroy.html</span>
-            <a class="draft-open" href="destroy.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="mondrian.html" loading="lazy" title="Mondrian" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">mondrian.html</span>
-            <a class="draft-open" href="mondrian.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="haiku.html" loading="lazy" title="Haiku" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">haiku.html</span>
-            <a class="draft-open" href="haiku.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="plinko.html" loading="lazy" title="Plinko" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">plinko.html</span>
-            <a class="draft-open" href="plinko.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="spacelanes.html" loading="lazy" title="Spacelanes" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">spacelanes.html</span>
-            <a class="draft-open" href="spacelanes.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="video.html" loading="lazy" title="Video" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">video.html</span>
-            <a class="draft-open" href="video.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="visualizer.html" loading="lazy" title="Visualizer" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">visualizer.html</span>
-            <a class="draft-open" href="visualizer.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="barber.html" loading="lazy" title="Barber" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">barber.html</span>
-            <a class="draft-open" href="barber.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="barber2.html?v=20260325" loading="lazy" title="Barber 2" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">barber2.html</span>
-            <a class="draft-open" href="barber2.html?v=20260325">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="barber3.html" loading="lazy" title="Barber 3" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">barber3.html</span>
-            <a class="draft-open" href="barber3.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="barber-swiss.html" loading="lazy" title="Barber Swiss" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">barber-swiss.html</span>
-            <a class="draft-open" href="barber-swiss.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="barber-matrix.html" loading="lazy" title="Barber Matrix" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">barber-matrix.html</span>
-            <a class="draft-open" href="barber-matrix.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="letters.html" loading="lazy" title="Letters" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">letters.html</span>
-            <a class="draft-open" href="letters.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="voice.html" loading="lazy" title="Voice" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">voice.html</span>
-            <a class="draft-open" href="voice.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="crow.html" loading="lazy" title="Crow" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">crow.html</span>
-            <a class="draft-open" href="crow.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="type.html" loading="lazy" title="Type" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">type.html</span>
-            <a class="draft-open" href="type.html">Open ↗</a>
-          </div>
-        </article>
-
-        <article class="draft-card">
-          <div class="draft-preview-wrap">
-            <iframe class="draft-preview" src="backup-mind.html" loading="lazy" title="Backup Mind" aria-hidden="true" tabindex="-1"></iframe>
-          </div>
-          <div class="draft-card-body">
-            <span class="draft-name">backup-mind.html</span>
-            <a class="draft-open" href="backup-mind.html">Open ↗</a>
-          </div>
-        </article>
-
-      </div>
-    </div>
-  </section>
-</main>
-
-<footer class="site-footer">
-  <div class="site-container">
-    <div class="footer-inner">
-      <a href="index.html" aria-label="John Rice — home"><img src="assets/img/assorted/johnrice-logo-white.svg" alt="John Rice" style="height:18px;opacity:0.5;"></a>
-      <ul class="footer-nav" role="list">
-        <li><a href="work.html">Work</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="contact.html">Contact</a></li>
-        <li><a href="drafts.html">Drafts</a></li>
-        <li><a href="assets/pdf/john-rice-resume-2026.pdf" target="_blank" rel="noopener">Résumé</a></li>
-      </ul>
-      <div class="footer-social">
-        <a href="https://www.linkedin.com/in/johncrice/" target="_blank" rel="noopener">LinkedIn</a>
-        <a href="https://www.instagram.com/johncrice/" target="_blank" rel="noopener">Instagram</a>
-        <a href="mailto:john@johnrice.com">Email</a>
-      </div>
-      <p class="footer-copy">© 2026 JCRICE Design LLC</p>
-    </div>
-  </div>
-</footer>
-<script src="assets/js/site-nav.js"></script>
-</body>
-</html>
+</div></div></section></main>
+<footer class="site-footer"><div class="site-container"><div class="footer-inner"><a href="index.html" aria-label="John Rice — home"><img src="assets/img/assorted/johnrice-logo-white.svg" alt="John Rice" style="height:18px;opacity:.5"></a><ul class="footer-nav" role="list"><li><a href="work.html">Work</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="drafts.html">Drafts</a></li><li><a href="assets/pdf/john-rice-resume-2026.pdf" target="_blank" rel="noopener">Résumé</a></li></ul><div class="footer-social"><a href="https://www.linkedin.com/in/johncrice/" target="_blank" rel="noopener">LinkedIn</a><a href="https://www.instagram.com/johncrice/" target="_blank" rel="noopener">Instagram</a><a href="mailto:john@johnrice.com">Email</a></div><p class="footer-copy">© 2026 JCRICE Design LLC</p></div></div></footer><script src="assets/js/site-nav.js"></script></body></html>
