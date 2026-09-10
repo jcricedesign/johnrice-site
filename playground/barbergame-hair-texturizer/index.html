@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>BarberGame — Find Your Cut</title>
+<style>
+:root{
+  --bg:#0b0b0c; --panel:#151517; --panel2:#1d1d20; --text:#f5f5f2;
+  --muted:#aaa9ad; --line:#2d2d31; --accent:#c9ff54; --danger:#ff7b7b;
+  --radius:22px;
+}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input{font:inherit}.app{max-width:720px;margin:0 auto;min-height:100vh;padding:20px 18px 120px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:34px}.brand{font-weight:800;letter-spacing:.08em;font-size:14px}
+.progress{font-size:13px;color:var(--muted)}
+h1{font-size:clamp(36px,9vw,58px);line-height:.95;letter-spacing:-.045em;margin:0 0 14px;max-width:620px}
+.lede{font-size:18px;line-height:1.45;color:var(--muted);margin:0 0 28px;max-width:560px}
+.screen{display:none}.screen.active{display:block}
+.field{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:22px;border-radius:18px;font-size:22px;outline:none}
+.field:focus{border-color:#666}.primary{width:100%;margin-top:18px;padding:20px 22px;border:0;border-radius:18px;background:var(--accent);color:#111;font-weight:800;font-size:19px;cursor:pointer}
+.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.choice,.style-card{border:1px solid var(--line);border-radius:20px;background:var(--panel);color:var(--text);padding:0;overflow:hidden;text-align:left;cursor:pointer;position:relative}
+.choice .visual{height:130px;display:grid;place-items:center;background:#222;font-size:56px}
+.choice .label{padding:16px;font-weight:750;font-size:17px}
+.choice.selected,.style-card.selected{outline:3px solid var(--accent);outline-offset:-3px}
+.chips{display:flex;gap:9px;overflow:auto;padding:0 0 12px;margin-bottom:14px;scrollbar-width:none}
+.chip{white-space:nowrap;border:1px solid var(--line);background:var(--panel);color:var(--text);padding:12px 16px;border-radius:999px;cursor:pointer}
+.chip.active{background:var(--text);color:#111}
+.style-card svg{width:100%;display:block;aspect-ratio:1/1.12;object-fit:cover}.style-card .meta{padding:14px 14px 17px}.style-card .name{font-weight:780;font-size:16px}.style-card .desc{color:var(--muted);font-size:13px;margin-top:4px}
+.sticky{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(transparent,var(--bg) 22%);padding:32px 18px 18px;pointer-events:none}.sticky-inner{max-width:684px;margin:0 auto;display:flex;gap:10px;pointer-events:auto}
+.sticky button{margin:0}.sticky .back{width:110px}
+.refine-grid{display:grid;gap:12px}.refine{padding:19px;border-radius:18px;background:var(--panel);border:1px solid var(--line);cursor:pointer}
+.refine strong{display:block;font-size:18px}.refine span{color:var(--muted);font-size:14px}.refine.selected{outline:3px solid var(--accent);outline-offset:-3px}
+.summary-card{background:var(--panel);border:1px solid var(--line);border-radius:26px;overflow:hidden}.summary-hero{display:grid;grid-template-columns:42% 58%;min-height:250px}.summary-art{background:#222}.summary-art svg{width:100%;height:100%;object-fit:cover}.summary-copy{padding:22px}.eyebrow{color:var(--accent);font-size:12px;letter-spacing:.08em;font-weight:800;text-transform:uppercase}
+.summary-copy h2{font-size:27px;line-height:1.05;margin:8px 0 18px}.facts{display:grid;gap:10px}.fact{border-top:1px solid var(--line);padding-top:10px}.fact b{display:block;font-size:13px}.fact span{font-size:14px;color:var(--muted)}
+.note{margin-top:14px;padding:16px;background:#101012;border:1px solid var(--line);border-radius:16px;color:var(--muted);font-size:14px}
+.small{font-size:13px;color:var(--muted);margin-top:10px}.hidden{display:none!important}
+@media(min-width:600px){.grid.styles{grid-template-columns:repeat(3,1fr)}.choice .visual{height:160px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar"><div class="brand">THE BARBERGAME</div><div class="progress" id="progress">1 / 5</div></div>
+
+  <section class="screen active" data-step="1">
+    <h1>What should we call you?</h1>
+    <p class="lede">We’ll help you show your barber what you mean. You don’t need to know the haircut name.</p>
+    <input id="name" class="field" placeholder="Your name" autocomplete="given-name"/>
+    <button class="primary" id="startBtn">Find my cut</button>
+  </section>
+
+  <section class="screen" data-step="2">
+    <h1>Which looks most like your hair?</h1>
+    <p class="lede">Pick the closest texture. This helps us show styles that behave more like your hair.</p>
+    <div class="grid" id="textureGrid"></div>
+  </section>
+
+  <section class="screen" data-step="3">
+    <h1>What are you thinking?</h1>
+    <p class="lede">Start broad. Tap anything that feels close—you can refine it next.</p>
+    <div class="chips" id="categoryChips"></div>
+    <div class="grid styles" id="styleGrid"></div>
+  </section>
+
+  <section class="screen" data-step="4">
+    <h1>Make it closer.</h1>
+    <p class="lede">You’re not choosing technical terms. Just choose what looks and sounds more like what you want.</p>
+    <div id="selectedPreview" style="margin-bottom:18px"></div>
+    <div class="refine-grid" id="refineGrid"></div>
+  </section>
+
+  <section class="screen" data-step="5">
+    <h1>Show your barber this.</h1>
+    <p class="lede">This gives your barber a clearer starting point before the appointment.</p>
+    <div id="summary"></div>
+    <button class="primary" onclick="window.print()">Save / share this card</button>
+    <p class="small">Prototype: in the full product this card could be attached directly to the appointment.</p>
+  </section>
+</div>
+
+<div class="sticky hidden" id="sticky">
+  <div class="sticky-inner">
+    <button class="primary secondary back" id="backBtn">Back</button>
+    <button class="primary" id="continueBtn">Continue</button>
+  </div>
+</div>
+
+<script>
+const styles = [
+{id:"low-taper-curls",name:"Low taper + curls",cat:"Short",texture:"Curly",length:"Short",sides:"Low taper",top:"Keep curl length",skin:"#8f5f3f",hair:"#161616"},
+{id:"mid-fade-crop",name:"Mid fade + textured crop",cat:"Short",texture:"Wavy",length:"Short",sides:"Mid fade",top:"Textured top",skin:"#d2a27f",hair:"#2d241f"},
+{id:"buzz-fade",name:"Buzz + fade",cat:"Short",texture:"Straight",length:"Short",sides:"High fade",top:"Very short",skin:"#6e442e",hair:"#121212"},
+{id:"taper-waves",name:"Taper + waves",cat:"Short",texture:"Coily",length:"Short",sides:"Low taper",top:"Keep waves",skin:"#4b2e22",hair:"#111111"},
+{id:"curly-fringe",name:"Curly fringe",cat:"Medium",texture:"Curly",length:"Medium",sides:"Soft taper",top:"Forward fringe",skin:"#b97956",hair:"#2a201b"},
+{id:"classic-sidepart",name:"Classic side part",cat:"Classic",texture:"Straight",length:"Medium",sides:"Scissor / taper",top:"Side part",skin:"#e0b28d",hair:"#47372f"},
+{id:"loc-taper",name:"Locs + taper",cat:"Locs",texture:"Coily",length:"Medium",sides:"Temple taper",top:"Keep locs",skin:"#5a3525",hair:"#151515"},
+{id:"twists-fade",name:"Twists + fade",cat:"Braids / twists",texture:"Coily",length:"Medium",sides:"Low fade",top:"Two-strand twists",skin:"#7b4d34",hair:"#171717"},
+{id:"long-layers",name:"Long layers",cat:"Longer",texture:"Wavy",length:"Long",sides:"No fade",top:"Keep length",skin:"#c58e68",hair:"#3b2c25"},
+{id:"curly-shag",name:"Curly shag",cat:"Longer",texture:"Curly",length:"Long",sides:"Natural",top:"Layered curls",skin:"#e1ad86",hair:"#33231e"},
+{id:"afro-shape",name:"Natural rounded shape",cat:"Natural",texture:"Coily",length:"Medium",sides:"Natural",top:"Shape only",skin:"#503021",hair:"#101010"},
+{id:"slick-back",name:"Slick back",cat:"Classic",texture:"Straight",length:"Medium",sides:"Tapered",top:"Longer back",skin:"#b77d5d",hair:"#1e1a18"}
+];
+
+function avatarSVG(s){
+ const hair=s.hair, skin=s.skin; let hairMarkup="";
+ if(s.cat==="Locs") hairMarkup=[0,1,2,3,4,5,6,7].map(i=>`<rect x="${42+i*10}" y="${20+(i%2)*3}" width="7" height="${62+(i%3)*8}" rx="3.5" fill="${hair}"/>`).join("");
+ else if(s.cat==="Braids / twists") hairMarkup=[0,1,2,3,4,5,6].map(i=>`<path d="M${40+i*11} 35 q 6 -16 12 0 t 0 30" stroke="${hair}" stroke-width="7" fill="none" stroke-linecap="round"/>`).join("");
+ else if(s.texture==="Coily") {let c=[];for(let x=42;x<119;x+=14)for(let y=27;y<64;y+=13)c.push(`<circle cx="${x}" cy="${y}" r="12" fill="${hair}"/>`);hairMarkup=c.join("")}
+ else if(s.texture==="Curly") {let c=[];for(let x=42;x<120;x+=16)for(let y=28;y<58;y+=15)c.push(`<circle cx="${x}" cy="${y}" r="11" fill="${hair}"/>`);hairMarkup=c.join("")}
+ else if(s.id==="buzz-fade") hairMarkup=`<path d="M38 64 Q45 21 80 19 Q118 21 122 64 Q101 42 80 42 Q58 42 38 64Z" fill="${hair}"/>`;
+ else if(s.length==="Long") hairMarkup=`<path d="M36 57 Q41 17 80 19 Q122 18 126 58 L122 142 Q105 123 110 70 Q80 45 49 70 Q54 123 37 143Z" fill="${hair}"/>`;
+ else hairMarkup=`<path d="M36 62 Q42 17 80 18 Q121 18 126 62 Q105 37 80 39 Q55 38 36 62Z" fill="${hair}"/>`;
+ return `<svg viewBox="0 0 160 190" role="img" aria-label="${s.name} illustration"><rect width="160" height="190" rx="22" fill="#262626"/><circle cx="80" cy="91" r="42" fill="${skin}"/><rect x="63" y="124" width="34" height="35" rx="15" fill="${skin}"/><path d="M35 190 Q42 145 80 145 Q118 145 125 190Z" fill="#111"/>${hairMarkup}<circle cx="64" cy="91" r="3" fill="#1a1715"/><circle cx="96" cy="91" r="3" fill="#1a1715"/><path d="M67 111 Q80 119 93 111" stroke="#3a241c" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`;
+}
+styles.forEach(s=>s.svg=avatarSVG(s));
+let state={step:1,name:"",texture:"",category:"All",style:null,refine:"Keep it like this"};
+const textures=[["Straight","〰","Hair falls mostly straight"],["Wavy","≈","Loose bends or S-shapes"],["Curly","◌","Defined curls or ringlets"],["Coily","✺","Tight coils or zig-zag texture"]];
+const categories=["All","Short","Medium","Longer","Natural","Braids / twists","Locs","Classic"];
+const screens=[...document.querySelectorAll(".screen")], sticky=document.getElementById("sticky"), progress=document.getElementById("progress");
+function go(step){state.step=step;screens.forEach(s=>s.classList.toggle("active",+s.dataset.step===step));progress.textContent=`${step} / 5`;sticky.classList.toggle("hidden",step===1||step===5);document.getElementById("continueBtn").textContent=step===4?"Make my card":"Continue";window.scrollTo({top:0,behavior:"smooth"});if(step===3)renderStyles();if(step===4)renderRefine();if(step===5)renderSummary()}
+document.getElementById("startBtn").onclick=()=>{const n=document.getElementById("name").value.trim();if(!n){document.getElementById("name").focus();return}state.name=n;go(2)};
+const tg=document.getElementById("textureGrid");textures.forEach(([name,icon,desc])=>{const b=document.createElement("button");b.className="choice";b.innerHTML=`<div class="visual">${icon}</div><div class="label">${name}<div class="small">${desc}</div></div>`;b.onclick=()=>{state.texture=name;[...tg.children].forEach(x=>x.classList.remove("selected"));b.classList.add("selected")};tg.appendChild(b)});
+const chips=document.getElementById("categoryChips");categories.forEach(cat=>{const b=document.createElement("button");b.className="chip"+(cat==="All"?" active":"");b.textContent=cat;b.onclick=()=>{state.category=cat;[...chips.children].forEach(x=>x.classList.remove("active"));b.classList.add("active");renderStyles()};chips.appendChild(b)});
+function filtered(){let arr=styles;if(state.texture)arr=arr.filter(s=>s.texture===state.texture||state.category!=="All");if(state.category!=="All")arr=arr.filter(s=>s.cat===state.category);return arr.length?arr:styles.filter(s=>state.category==="All"||s.cat===state.category)}
+function renderStyles(){const grid=document.getElementById("styleGrid");grid.innerHTML="";filtered().forEach(s=>{const b=document.createElement("button");b.className="style-card"+(state.style?.id===s.id?" selected":"");b.innerHTML=`${s.svg}<div class="meta"><div class="name">${s.name}</div><div class="desc">${s.texture} · ${s.length}</div></div>`;b.onclick=()=>{state.style=s;renderStyles()};grid.appendChild(b)})}
+function renderRefine(){if(!state.style){go(3);return}document.getElementById("selectedPreview").innerHTML=`<div class="style-card selected" style="display:grid;grid-template-columns:130px 1fr;align-items:center">${state.style.svg}<div class="meta"><div class="eyebrow">Your starting point</div><div class="name" style="font-size:22px;margin-top:6px">${state.style.name}</div></div></div>`;const opts=[["Shorter","Take more length off"],["Keep it like this","Use this as the main reference"],["Longer","Keep a little more length"],["Softer sides","Less contrast on the sides"],["Cleaner sides","Tighter, sharper sides"]];const r=document.getElementById("refineGrid");r.innerHTML="";opts.forEach(([a,b])=>{const el=document.createElement("button");el.className="refine"+(state.refine===a?" selected":"");el.innerHTML=`<strong>${a}</strong><span>${b}</span>`;el.onclick=()=>{state.refine=a;renderRefine()};r.appendChild(el)})}
+function renderSummary(){const s=state.style;document.getElementById("summary").innerHTML=`<div class="summary-card"><div class="summary-hero"><div class="summary-art">${s.svg}</div><div class="summary-copy"><div class="eyebrow">${state.name} wants this</div><h2>${s.name}</h2><div class="facts"><div class="fact"><b>Hair texture</b><span>${state.texture||s.texture}</span></div><div class="fact"><b>Sides</b><span>${s.sides}</span></div><div class="fact"><b>Top</b><span>${s.top}</span></div><div class="fact"><b>Refinement</b><span>${state.refine}</span></div></div></div></div><div class="note">Use this as a conversation starter, not an exact promise of the result. Your barber can adjust for your hair, growth pattern, and face shape.</div></div>`}
+document.getElementById("continueBtn").onclick=()=>{if(state.step===2&&!state.texture)return;if(state.step===3&&!state.style)return;go(state.step+1)};document.getElementById("backBtn").onclick=()=>go(Math.max(1,state.step-1));
+</script>
+</body>
+</html>
