@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invisible World Traffic — John Rice Playground</title>
+<meta name="description" content="Invisible World Traffic is a Raspberry Pi-based live visualization of aircraft, Washington State Ferries, weather radar, and local atmospheric conditions across Western Washington.">
+<link rel="stylesheet" href="../../site-common.css">
+<style>
+  .iw-hero{padding:76px 0 58px}
+  .iw-kicker{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#7a7a73;font-weight:700;margin:0 0 16px}
+  .iw-title{font-size:clamp(64px,9vw,120px);line-height:.9;letter-spacing:-.06em;margin:0;max-width:940px}
+  .iw-lede{font-size:clamp(22px,2.2vw,34px);line-height:1.17;max-width:820px;margin:30px 0 0}
+  .iw-section{padding:64px 0}
+  .iw-grid{display:grid;grid-template-columns:220px 1fr;gap:56px}
+  .iw-label{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#7a7a73;font-weight:700}
+  .iw-section h2{font-size:clamp(36px,4vw,60px);line-height:.98;letter-spacing:-.045em;margin:0 0 22px}
+  .iw-section p{font-size:18px;line-height:1.55}
+  .iw-stack{background:#111;color:#fff;padding:34px;margin-top:28px}
+  .iw-row{display:grid;grid-template-columns:190px 1fr;gap:28px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.14)}
+  .iw-row:last-child{border-bottom:0}
+  .iw-row strong{font-size:15px}
+  .iw-row span{font-size:16px;line-height:1.45;color:rgba(255,255,255,.74)}
+  .iw-features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:#cbc8bb;border:1px solid #cbc8bb;margin-top:30px}
+  .iw-feature{background:#f3f1e8;padding:28px;min-height:170px}
+  .iw-feature strong{font-size:22px;display:block;margin-bottom:10px}
+  .iw-feature p{font-size:16px;color:#6e6e67;margin:0}
+  .iw-flow{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid #cbc8bb;margin-top:30px}
+  .iw-flow div{padding:18px;min-height:112px;border-right:1px solid #cbc8bb;display:flex;flex-direction:column;justify-content:space-between}
+  .iw-flow div:last-child{border-right:0}
+  .iw-flow b{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:#77766f}
+  .iw-flow span{font-size:16px;font-weight:700}
+  .iw-health{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#cbc8bb;border:1px solid #cbc8bb;margin-top:28px}
+  .iw-health div{background:#f3f1e8;padding:24px}
+  .iw-health strong{display:block;font-size:29px;letter-spacing:-.03em}
+  .iw-health span{display:block;margin-top:6px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#76756f}
+  .iw-rule{border:0;border-top:1px solid #cbc8bb;margin:0}
+  @media(max-width:850px){
+    .iw-grid{grid-template-columns:1fr;gap:18px}
+    .iw-features{grid-template-columns:1fr}
+    .iw-flow{grid-template-columns:1fr}
+    .iw-flow div{border-right:0;border-bottom:1px solid #cbc8bb}
+    .iw-health{grid-template-columns:1fr 1fr}
+    .iw-row{grid-template-columns:1fr;gap:6px}
+  }
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+
+<nav class="site-nav" role="navigation" aria-label="Main navigation">
+  <div class="site-container">
+    <a href="../../index.html" class="nav-logo" aria-label="John Rice — home">
+      <img src="../../assets/img/assorted/JCR_sigil.png" alt="" class="sigil">
+      <img src="../../assets/img/assorted/johnrice-logo-white.svg" alt="John Rice">
+    </a>
+    <div class="nav-group desktop">
+      <ul class="nav-links" role="list">
+        <li><a href="../../work.html">Work</a></li>
+        <li><a href="../../about.html">About</a></li>
+        <li><a href="../../contact.html">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main id="main">
+<section class="iw-hero">
+  <div class="site-container">
+    <p class="iw-kicker">Playground · Invisible World · Live systems</p>
+    <h1 class="iw-title">Invisible World<br>Traffic</h1>
+    <p class="iw-lede">A live geographic instrument for seeing aircraft, Washington State Ferries, weather, and atmospheric conditions moving through Western Washington.</p>
+  </div>
+</section>
+
+<hr class="iw-rule">
+
+<section class="iw-section">
+  <div class="site-container iw-grid">
+    <p class="iw-label">What it is</p>
+    <div>
+      <h2>One place, multiple invisible systems.</h2>
+      <p>Invisible World Traffic began as a local ADS-B flight tracker. As more live layers were added, it became a broader view of what is moving through the same geography at the same time: aircraft overhead, ferries crossing Puget Sound, precipitation moving across the region, and current weather conditions at the map center.</p>
+      <p>The experience is designed for a television at roughly ten feet. Large aircraft silhouettes, altitude masts, hero labels, compact ferry markers, synchronized maps and large-format weather cards make the information legible without turning it into a conventional dashboard.</p>
+
+      <div class="iw-features">
+        <div class="iw-feature"><strong>Aircraft</strong><p>Live ADS-B positions, speed, heading, barometric altitude, climb/descent state, trails, hero rotation, route enrichment, session records and airport markers.</p></div>
+        <div class="iw-feature"><strong>Washington State Ferries</strong><p>Selected AIS vessel positions shown as a quiet water layer with directional markers, names, speed, visible/moving counts and session records.</p></div>
+        <div class="iw-feature"><strong>Weather</strong><p>Looping precipitation radar, current temperature, apparent temperature, wind, gusts, cloud cover and precipitation at the synchronized map center.</p></div>
+        <div class="iw-feature"><strong>Forecast</strong><p>Large episodic Today and Next 3 Days cards appear briefly, then disappear so Weather remains an ambient live instrument rather than a forecast dashboard.</p></div>
+        <div class="iw-feature"><strong>Synchronized views</strong><p>Weather and Traffic can run side-by-side. Panning or zooming either map moves the other to the identical geographic view.</p></div>
+        <div class="iw-feature"><strong>Resilient by design</strong><p>Stale ADS-B data is detected and cleared, route enrichment can fail independently, systemd manages the core services, and the combined view runs as its own persistent service.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="iw-rule">
+
+<section class="iw-section">
+  <div class="site-container iw-grid">
+    <p class="iw-label">Hardware</p>
+    <div>
+      <h2>A Raspberry Pi doing quite a lot.</h2>
+      <div class="iw-stack">
+        <div class="iw-row"><strong>Computer</strong><span>Raspberry Pi 5, 4 GB RAM, running Debian Linux as the dedicated <em>lab-pi</em>.</span></div>
+        <div class="iw-row"><strong>ADS-B receiver</strong><span>Airspy R2 receiving 1090 MHz aircraft broadcasts through an outdoor antenna and coax feed.</span></div>
+        <div class="iw-row"><strong>Display</strong><span>55-inch TCL television used as the primary 10-foot interface.</span></div>
+        <div class="iw-row"><strong>Marine data</strong><span>AIS vessel data collected separately and filtered to the Washington State Ferries fleet for this view.</span></div>
+        <div class="iw-row"><strong>Camera workload</strong><span>CrowCam is also running on the same Pi through an RTSP-to-HLS ffmpeg pipeline.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="iw-rule">
+
+<section class="iw-section">
+  <div class="site-container iw-grid">
+    <p class="iw-label">Software stack</p>
+    <div>
+      <h2>Radio, live feeds, local services, browser.</h2>
+      <div class="iw-flow">
+        <div><b>01</b><span>Airspy R2</span></div>
+        <div><b>02</b><span>airspy_adsb</span></div>
+        <div><b>03</b><span>readsb</span></div>
+        <div><b>04</b><span>AIS + route cache</span></div>
+        <div><b>05</b><span>Weather APIs</span></div>
+        <div><b>06</b><span>Leaflet + Chromium</span></div>
+      </div>
+
+      <div class="iw-stack">
+        <div class="iw-row"><strong>Aircraft ingest</strong><span><code>airspy_adsb</code> receives ADS-B and feeds <code>readsb</code>, which writes fresh aircraft JSON about once per second.</span></div>
+        <div class="iw-row"><strong>Traffic UI</strong><span>Custom HTML, CSS and JavaScript with Leaflet and OpenStreetMap render aircraft, altitude masts, trails, airports, ferries, hero cards and session stats.</span></div>
+        <div class="iw-row"><strong>Route enrichment</strong><span>A Python helper caches route lookups, preserves last-known-good data and hides routes that fail a position/heading plausibility check.</span></div>
+        <div class="iw-row"><strong>Marine layer</strong><span><code>marine_live.py</code> collects AIS data, classifies vessels and exposes local JSON; the Traffic UI applies a strict Washington State Ferries fleet filter.</span></div>
+        <div class="iw-row"><strong>Radar</strong><span>RainViewer recent radar frames are tiled over the Weather map and loop automatically.</span></div>
+        <div class="iw-row"><strong>Conditions + forecast</strong><span>Open-Meteo supplies current conditions and daily forecast data at the synchronized map center.</span></div>
+        <div class="iw-row"><strong>Service management</strong><span>systemd manages the ADS-B stack and the persistent combined Weather + Traffic service. Core Traffic runs on port 8090; the combined experience runs separately on port 8097.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="iw-rule">
+
+<section class="iw-section">
+  <div class="site-container iw-grid">
+    <p class="iw-label">Current state</p>
+    <div>
+      <h2>Comfortable headroom.</h2>
+      <p>At the current checkpoint, the Pi was simultaneously running ADS-B reception/decoding, aircraft visualization, AIS ferry ingestion, route enrichment, looping radar, current weather and forecast, Chromium rendering, two local web services, and CrowCam HLS.</p>
+      <div class="iw-health">
+        <div><strong>56.5°C</strong><span>CPU temperature</span></div>
+        <div><strong>0x0</strong><span>Throttle flags</span></div>
+        <div><strong>~2 GB</strong><span>RAM available</span></div>
+        <div><strong>19%</strong><span>Root disk used</span></div>
+      </div>
+      <p style="margin-top:24px">The five-minute load average was under 0.4, swap usage was zero, and the machine had been up for more than five days. The current direction is therefore to improve resilience and presentation before splitting work across additional hardware.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="site-footer">
+  <div class="site-container">
+    <div class="footer-inner">
+      <a href="../../index.html" aria-label="John Rice — home"><img src="../../assets/img/assorted/johnrice-logo-white.svg" alt="John Rice" style="height:18px;opacity:0.5;"></a>
+      <p class="footer-copy">Invisible World Traffic · Playground · 2026</p>
+    </div>
+  </div>
+</footer>
+
+<script src="../../assets/js/site-nav.js"></script>
+</body>
+</html>
